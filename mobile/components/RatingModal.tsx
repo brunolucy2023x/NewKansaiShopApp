@@ -1,7 +1,5 @@
 import { Order } from "@/types";
-
 import { Ionicons } from "@expo/vector-icons";
-
 import { Image } from "expo-image";
 
 import {
@@ -12,6 +10,7 @@ import {
   ScrollView,
   TouchableOpacity,
   ActivityIndicator,
+  Dimensions,
 } from "react-native";
 
 /* =========================================================
@@ -40,22 +39,22 @@ interface RatingModalProps {
 }
 
 /* =========================================================
+   CONSTANTS
+========================================================= */
+
+const { width } = Dimensions.get("window");
+
+/* =========================================================
    COMPONENT
 ========================================================= */
 
 const RatingModal = ({
   visible,
-
   onClose,
-
   order,
-
   productRatings,
-
   onRatingChange,
-
   onSubmit,
-
   isSubmitting,
 }: RatingModalProps) => {
   /* =====================================================
@@ -69,25 +68,24 @@ const RatingModal = ({
       visible={visible}
       animationType="fade"
       transparent
-      onRequestClose={
-        onClose
-      }
+      statusBarTranslucent
+      onRequestClose={onClose}
     >
       {/* =================================================
          BACKDROP
       ================================================= */}
 
-      <TouchableWithoutFeedback
-        onPress={onClose}
-      >
+      <TouchableWithoutFeedback onPress={onClose}>
         <View
           className="
             flex-1
-            bg-black/80
-            items-center
             justify-center
-            px-4
+            items-center
+            px-5
           "
+          style={{
+            backgroundColor: "rgba(0,0,0,0.65)",
+          }}
         >
           {/* =============================================
              PREVENT BACKDROP CLOSE
@@ -95,39 +93,65 @@ const RatingModal = ({
 
           <TouchableWithoutFeedback>
             <View
+              style={{
+                width: width - 32,
+                maxHeight: "88%",
+              }}
               className="
-                bg-surface
-                rounded-3xl
-                p-6
-                w-full
-                max-w-md
-                max-h-[85%]
-                border
-                border-border
+                bg-white
+                rounded-[38px]
+                px-5
+                pt-6
+                pb-5
               "
             >
+              {/* =========================================
+                 HANDLE
+              ========================================= */}
+
+              <View className="items-center mb-5">
+                <View
+                  className="
+                    w-16
+                    h-1.5
+                    rounded-full
+                    bg-zinc-200
+                  "
+                />
+              </View>
+
               {/* =========================================
                  HEADER
               ========================================= */}
 
-              <View className="items-center mb-6">
+              <View className="items-center mb-7">
                 {/* ICON */}
 
                 <View
                   className="
-                    bg-primary/20
+                    w-24
+                    h-24
                     rounded-full
-                    w-20
-                    h-20
                     items-center
                     justify-center
-                    mb-4
+                    mb-5
                   "
+                  style={{
+                    backgroundColor: "#D9F26A",
+                    shadowColor: "#D9F26A",
+                    shadowOffset: {
+                      width: 0,
+                      height: 10,
+                    },
+                    shadowOpacity: 0.25,
+                    shadowRadius: 20,
+                    elevation: 8,
+                  }}
                 >
                   <Ionicons
                     name="star"
-                    size={36}
-                    color="#1DB954"
+                    size={42}
+                    color="#111111"
                   />
                 </View>
 
@@ -135,8 +159,8 @@ const RatingModal = ({
 
                 <Text
                   className="
-                    text-text-primary
-                    text-2xl
+                    text-black
+                    text-[28px]
                     font-bold
                     mb-2
                   "
@@ -148,15 +172,15 @@ const RatingModal = ({
 
                 <Text
                   className="
-                    text-text-secondary
+                    text-zinc-500
                     text-center
-                    text-sm
-                    leading-5
+                    text-[15px]
+                    leading-6
+                    px-4
                   "
                 >
-                  Your feedback helps
-                  other customers make
-                  better decisions.
+                  Your feedback helps customers
+                  make better purchase decisions.
                 </Text>
               </View>
 
@@ -165,60 +189,45 @@ const RatingModal = ({
               ========================================= */}
 
               <ScrollView
-                className="mb-5"
-                showsVerticalScrollIndicator={
-                  false
-                }
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={{
+                  paddingBottom: 10,
+                }}
               >
                 {order.orderItems.map(
-                  (
-                    item,
-                    index
-                  ) => {
+                  (item, index) => {
                     const productId =
-                      item
-                        .product
-                        ?.id ||
-                      item.id;
+                      item.product?.id || item.id;
 
                     const currentRating =
-                      productRatings[
-                        productId
-                      ] || 0;
+                      productRatings[productId] || 0;
 
                     return (
                       <View
-                        key={
-                          item.id
-                        }
-                        className={`bg-background-lighter rounded-3xl p-4 border border-border ${
-                          index <
-                          order
-                            .orderItems
-                            .length -
-                            1
-                            ? "mb-4"
-                            : ""
-                        }`}
+                        key={item.id}
+                        className={`
+                          bg-[#F7F7F7]
+                          rounded-[30px]
+                          p-4
+                          mb-4
+                        `}
                       >
                         {/* =============================
                            PRODUCT INFO
                         ============================= */}
 
-                        <View className="flex-row items-center mb-4">
+                        <View className="flex-row">
                           {/* IMAGE */}
 
                           <Image
                             source={{
-                              uri:
-                                item.image,
+                              uri: item.image,
                             }}
                             style={{
-                              width: 72,
-
-                              height: 72,
-
-                              borderRadius: 16,
+                              width: 92,
+                              height: 92,
+                              borderRadius: 24,
+                              backgroundColor: "#EFEFEF",
                             }}
                             contentFit="cover"
                             transition={200}
@@ -226,131 +235,145 @@ const RatingModal = ({
 
                           {/* INFO */}
 
-                          <View className="flex-1 ml-4">
+                          <View className="flex-1 ml-4 justify-center">
                             <Text
+                              numberOfLines={2}
                               className="
-                                text-text-primary
+                                text-black
+                                text-[16px]
                                 font-bold
-                                text-sm
-                                leading-5
+                                leading-6
                               "
-                              numberOfLines={
-                                2
-                              }
                             >
-                              {
-                                item.name
-                              }
+                              {item.name}
                             </Text>
 
                             <Text
                               className="
-                                text-text-secondary
-                                text-xs
+                                text-zinc-400
+                                text-sm
                                 mt-2
                               "
                             >
-                              Qty:{" "}
-                              {
-                                item.quantity
-                              }{" "}
-                              • $
+                              Qty: {item.quantity}
+                            </Text>
+
+                            <Text
+                              className="
+                                text-black
+                                text-lg
+                                font-bold
+                                mt-1
+                              "
+                            >
+                              $
                               {Number(
                                 item.price
-                              ).toFixed(
-                                2
-                              )}
+                              ).toFixed(2)}
                             </Text>
                           </View>
                         </View>
 
                         {/* =============================
+                           DIVIDER
+                        ============================= */}
+
+                        <View
+                          className="
+                            h-[1px]
+                            bg-zinc-200
+                            my-5
+                          "
+                        />
+
+                        {/* =============================
                            STARS
                         ============================= */}
 
-                        <View className="flex-row justify-center">
-                          {[1, 2, 3, 4, 5].map(
-                            (
-                              star
-                            ) => {
-                              const active =
-                                star <=
-                                currentRating;
+                        <View className="items-center">
+                          <View className="flex-row">
+                            {[1, 2, 3, 4, 5].map(
+                              (star) => {
+                                const active =
+                                  star <= currentRating;
 
-                              return (
-                                <TouchableOpacity
-                                  key={
-                                    star
-                                  }
-                                  onPress={() =>
-                                    onRatingChange(
-                                      productId,
+                                return (
+                                  <TouchableOpacity
+                                    key={star}
+                                    onPress={() =>
+                                      onRatingChange(
+                                        productId,
+                                        star
+                                      )
+                                    }
+                                    activeOpacity={0.8}
+                                    className="mx-1"
+                                  >
+                                    <View
+                                      className="
+                                        w-12
+                                        h-12
+                                        rounded-2xl
+                                        items-center
+                                        justify-center
+                                      "
+                                      style={{
+                                        backgroundColor:
+                                          active
+                                            ? "#D9F26A"
+                                            : "#ECECEC",
+                                      }}
+                                    >
+                                      <Ionicons
+                                        name={
+                                          active
+                                            ? "star"
+                                            : "star-outline"
+                                        }
+                                        size={24}
+                                        color={
+                                          active
+                                            ? "#111111"
+                                            : "#9CA3AF"
+                                        }
+                                      />
+                                    </View>
+                                  </TouchableOpacity>
+                                );
+                              }
+                            )}
+                          </View>
 
-                                      star
-                                    )
-                                  }
-                                  activeOpacity={
-                                    0.7
-                                  }
-                                  className="mx-1"
-                                >
-                                  <Ionicons
-                                    name={
-                                      active
-                                        ? "star"
-                                        : "star-outline"
-                                    }
-                                    size={
-                                      34
-                                    }
-                                    color={
-                                      active
-                                        ? "#1DB954"
-                                        : "#666"
-                                    }
-                                  />
-                                </TouchableOpacity>
-                              );
-                            }
+                          {/* =============================
+                             LABEL
+                          ============================= */}
+
+                          {currentRating > 0 && (
+                            <Text
+                              className="
+                                text-black
+                                text-base
+                                font-semibold
+                                mt-4
+                              "
+                            >
+                              {currentRating === 1 &&
+                                "Poor"}
+
+                              {currentRating === 2 &&
+                                "Fair"}
+
+                              {currentRating === 3 &&
+                                "Good"}
+
+                              {currentRating === 4 &&
+                                "Very Good"}
+
+                              {currentRating === 5 &&
+                                "Excellent"}
+                            </Text>
                           )}
                         </View>
-
-                        {/* =============================
-                           RATING LABEL
-                        ============================= */}
-
-                        {currentRating >
-                          0 && (
-                          <Text
-                            className="
-                              text-primary
-                              text-center
-                              text-sm
-                              font-semibold
-                              mt-3
-                            "
-                          >
-                            {currentRating ===
-                              1 &&
-                              "Poor"}
-
-                            {currentRating ===
-                              2 &&
-                              "Fair"}
-
-                            {currentRating ===
-                              3 &&
-                              "Good"}
-
-                            {currentRating ===
-                              4 &&
-                              "Very Good"}
-
-                            {currentRating ===
-                              5 &&
-                              "Excellent"}
-                          </Text>
-                        )}
                       </View>
                     );
                   }
@@ -361,46 +384,43 @@ const RatingModal = ({
                  ACTIONS
               ========================================= */}
 
-              <View className="gap-3">
+              <View className="mt-2">
                 {/* SUBMIT */}
 
                 <TouchableOpacity
+                  activeOpacity={0.85}
+                  onPress={onSubmit}
+                  disabled={isSubmitting}
+                  style={{
+                    backgroundColor: "#D9F26A",
+                  }}
                   className="
-                    bg-primary
-                    rounded-2xl
-                    py-4
+                    rounded-[26px]
+                    py-5
                     items-center
                     justify-center
+                    mb-3
                   "
-                  activeOpacity={
-                    0.8
-                  }
-                  onPress={
-                    onSubmit
-                  }
-                  disabled={
-                    isSubmitting
-                  }
                 >
                   {isSubmitting ? (
                     <ActivityIndicator
                       size="small"
-                      color="#121212"
+                      color="#111111"
                     />
                   ) : (
                     <View className="flex-row items-center">
                       <Ionicons
-                        name="send"
-                        size={18}
-                        color="#121212"
+                        name="paper-plane"
+                        size={20}
+                        color="#111111"
                       />
 
                       <Text
                         className="
-                          text-background
+                          text-black
+                          text-[17px]
                           font-bold
-                          text-base
-                          ml-2
+                          ml-3
                         "
                       >
                         Submit Ratings
@@ -412,29 +432,22 @@ const RatingModal = ({
                 {/* CANCEL */}
 
                 <TouchableOpacity
+                  activeOpacity={0.7}
+                  onPress={onClose}
+                  disabled={isSubmitting}
                   className="
-                    bg-background-lighter
-                    rounded-2xl
-                    py-4
+                    bg-[#F3F3F3]
+                    rounded-[26px]
+                    py-5
                     items-center
-                    border
-                    border-border
+                    justify-center
                   "
-                  activeOpacity={
-                    0.7
-                  }
-                  onPress={
-                    onClose
-                  }
-                  disabled={
-                    isSubmitting
-                  }
                 >
                   <Text
                     className="
-                      text-text-secondary
-                      font-bold
-                      text-base
+                      text-zinc-500
+                      text-[16px]
+                      font-semibold
                     "
                   >
                     Cancel

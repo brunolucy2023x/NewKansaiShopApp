@@ -1,6 +1,6 @@
 import { useAddresses } from "@/hooks/useAddressess";
 
-import { Address } from "@/types";
+import type { Address } from "@/types";
 
 import { Ionicons } from "@expo/vector-icons";
 
@@ -16,6 +16,7 @@ import {
   TouchableOpacity,
   ScrollView,
   ActivityIndicator,
+  TouchableWithoutFeedback,
 } from "react-native";
 
 /* =========================================================
@@ -60,7 +61,7 @@ const AddressSelectionModal = ({
     );
 
   /* =====================================================
-     SUPABASE ADDRESSES
+     ADDRESSES
   ===================================================== */
 
   const {
@@ -88,387 +89,583 @@ const AddressSelectionModal = ({
             address.isDefault
         );
 
-      if (
-        defaultAddress
-      ) {
-        setSelectedAddress(
-          defaultAddress
-        );
-      }
+      setSelectedAddress(
+        defaultAddress ||
+          addresses[0]
+      );
     }
   }, [addresses]);
+
+  /* =====================================================
+     RENDER
+  ===================================================== */
 
   return (
     <Modal
       visible={visible}
-      animationType="slide"
+      animationType="fade"
       transparent
+      statusBarTranslucent
       onRequestClose={
         onClose
       }
     >
-      <View
-        className="
-          flex-1
-          bg-black/60
-          justify-end
-        "
+      {/* BACKDROP */}
+
+      <TouchableWithoutFeedback
+        onPress={onClose}
       >
         <View
           className="
-            bg-background
-            rounded-t-3xl
-            h-[75%]
+            flex-1
+            justify-end
           "
+          style={{
+            backgroundColor:
+              "rgba(0,0,0,0.45)",
+          }}
         >
-          {/* =================================================
-             HEADER
-          ================================================= */}
+          {/* PREVENT CLOSE */}
 
-          <View
-            className="
-              flex-row
-              items-center
-              justify-between
-              p-6
-              border-b
-              border-surface
-            "
-          >
-            {/* TITLE */}
-
-            <View>
-              <Text
-                className="
-                  text-text-primary
-                  text-2xl
-                  font-bold
-                "
-              >
-                Select Address
-              </Text>
-
-              <Text
-                className="
-                  text-text-secondary
-                  text-sm
-                  mt-1
-                "
-              >
-                Choose delivery address
-              </Text>
-            </View>
-
-            {/* CLOSE BTN */}
-
-            <TouchableOpacity
-              onPress={
-                onClose
-              }
+          <TouchableWithoutFeedback>
+            <View
               className="
-                bg-surface
-                rounded-full
-                p-2
+                bg-white
+                rounded-t-[42px]
+                overflow-hidden
               "
-              activeOpacity={
-                0.7
-              }
+              style={{
+                height: "82%",
+              }}
             >
-              <Ionicons
-                name="close"
-                size={24}
-                color="#FFFFFF"
-              />
-            </TouchableOpacity>
-          </View>
+              {/* =================================================
+                 HANDLE
+              ================================================= */}
 
-          {/* =================================================
-             ADDRESSES LIST
-          ================================================= */}
-
-          <ScrollView
-            className="flex-1"
-            contentContainerStyle={{
-              padding: 24,
-
-              paddingBottom: 40,
-            }}
-            showsVerticalScrollIndicator={
-              false
-            }
-          >
-            {/* =============================================
-               LOADING
-            ============================================= */}
-
-            {addressesLoading ? (
-              <View className="py-16 items-center">
-                <ActivityIndicator
-                  size="large"
-                  color="#1DB954"
+              <View className="items-center pt-4">
+                <View
+                  className="
+                    w-16
+                    h-1.5
+                    rounded-full
+                    bg-[#D1D5DB]
+                  "
                 />
-
-                <Text className="text-text-secondary mt-4">
-                  Loading addresses...
-                </Text>
               </View>
-            ) : isError ? (
-              /* ===========================================
-                 ERROR
-              =========================================== */
 
-              <View className="py-16 items-center">
-                <Ionicons
-                  name="alert-circle-outline"
-                  size={64}
-                  color="#EF4444"
-                />
+              {/* =================================================
+                 HEADER
+              ================================================= */}
 
-                <Text className="text-text-primary text-xl font-bold mt-4">
-                  Failed to load
-                  addresses
-                </Text>
+              <View
+                className="
+                  px-6
+                  pt-5
+                  pb-5
+                  flex-row
+                  items-center
+                  justify-between
+                "
+              >
+                {/* LEFT */}
 
-                <Text className="text-text-secondary text-center mt-2">
-                  Please try again
-                </Text>
+                <View>
+                  <Text
+                    className="
+                      text-black
+                      text-[30px]
+                      font-black
+                    "
+                  >
+                    Addresses
+                  </Text>
+
+                  <Text
+                    className="
+                      text-[#6B7280]
+                      text-sm
+                      mt-1
+                    "
+                  >
+                    Choose delivery address
+                  </Text>
+                </View>
+
+                {/* CLOSE */}
+
+                <TouchableOpacity
+                  activeOpacity={
+                    0.8
+                  }
+                  onPress={
+                    onClose
+                  }
+                  className="
+                    w-12
+                    h-12
+                    rounded-full
+                    bg-[#F3F4F6]
+                    items-center
+                    justify-center
+                  "
+                >
+                  <Ionicons
+                    name="close"
+                    size={22}
+                    color="#111"
+                  />
+                </TouchableOpacity>
               </View>
-            ) : !addresses?.length ? (
-              /* ===========================================
-                 EMPTY
-              =========================================== */
 
-              <View className="py-16 items-center">
-                <Ionicons
-                  name="location-outline"
-                  size={64}
-                  color="#666"
-                />
+              {/* =================================================
+                 CONTENT
+              ================================================= */}
 
-                <Text className="text-text-primary text-xl font-bold mt-4">
-                  No addresses
-                  found
-                </Text>
+              <ScrollView
+                className="flex-1"
+                showsVerticalScrollIndicator={
+                  false
+                }
+                contentContainerStyle={{
+                  paddingHorizontal: 20,
+                  paddingBottom: 40,
+                }}
+              >
+                {/* =================================================
+                   LOADING
+                ================================================= */}
 
-                <Text className="text-text-secondary text-center mt-2">
-                  Add an address
-                  before checkout
-                </Text>
-              </View>
-            ) : (
-              /* ===========================================
-                 ADDRESS CARDS
-              =========================================== */
+                {addressesLoading ? (
+                  <View className="py-24 items-center">
+                    <View
+                      className="
+                        w-24
+                        h-24
+                        rounded-full
+                        bg-[#D9F26A]
+                        items-center
+                        justify-center
+                        mb-6
+                      "
+                    >
+                      <Ionicons
+                        name="location-outline"
+                        size={34}
+                        color="#111"
+                      />
+                    </View>
 
-              <View className="gap-4">
-                {addresses.map(
-                  (
-                    address: Address
-                  ) => {
-                    const isSelected =
-                      selectedAddress?.id ===
-                      address.id;
+                    <ActivityIndicator
+                      size="large"
+                      color="#111"
+                    />
 
-                    return (
-                      <TouchableOpacity
-                        key={
-                          address.id
-                        }
-                        className={`rounded-3xl p-6 border-2 ${
-                          isSelected
-                            ? "border-primary bg-primary/10"
-                            : "border-surface bg-surface"
-                        }`}
-                        activeOpacity={
-                          0.8
-                        }
-                        onPress={() =>
-                          setSelectedAddress(
-                            address
-                          )
-                        }
-                      >
-                        <View className="flex-row items-start justify-between">
-                          {/* LEFT */}
+                    <Text
+                      className="
+                        text-[#6B7280]
+                        mt-5
+                        text-base
+                        font-medium
+                      "
+                    >
+                      Loading addresses...
+                    </Text>
+                  </View>
+                ) : isError ? (
+                  /* =================================================
+                     ERROR
+                  ================================================= */
 
-                          <View className="flex-1">
-                            {/* LABEL */}
+                  <View className="py-24 items-center px-6">
+                    <View
+                      className="
+                        w-28
+                        h-28
+                        rounded-full
+                        bg-[#FEE2E2]
+                        items-center
+                        justify-center
+                        mb-6
+                      "
+                    >
+                      <Ionicons
+                        name="alert-circle-outline"
+                        size={54}
+                        color="#EF4444"
+                      />
+                    </View>
 
-                            <View className="flex-row items-center mb-3 flex-wrap">
-                              <Text className="text-primary font-bold text-lg mr-2">
-                                {address.label ||
-                                  "Address"}
-                              </Text>
+                    <Text
+                      className="
+                        text-black
+                        text-2xl
+                        font-black
+                        text-center
+                      "
+                    >
+                      Failed to load
+                      addresses
+                    </Text>
 
-                              {/* DEFAULT */}
+                    <Text
+                      className="
+                        text-[#6B7280]
+                        text-center
+                        mt-3
+                        leading-7
+                      "
+                    >
+                      Please try again later.
+                    </Text>
+                  </View>
+                ) : !addresses?.length ? (
+                  /* =================================================
+                     EMPTY
+                  ================================================= */
 
-                              {address.isDefault && (
+                  <View className="py-24 items-center px-6">
+                    <View
+                      className="
+                        w-28
+                        h-28
+                        rounded-full
+                        bg-[#F3F4F6]
+                        items-center
+                        justify-center
+                        mb-6
+                      "
+                    >
+                      <Ionicons
+                        name="location-outline"
+                        size={54}
+                        color="#999"
+                      />
+                    </View>
+
+                    <Text
+                      className="
+                        text-black
+                        text-2xl
+                        font-black
+                        text-center
+                      "
+                    >
+                      No addresses found
+                    </Text>
+
+                    <Text
+                      className="
+                        text-[#6B7280]
+                        text-center
+                        mt-3
+                        leading-7
+                      "
+                    >
+                      Add an address before
+                      checkout.
+                    </Text>
+                  </View>
+                ) : (
+                  /* =================================================
+                     ADDRESS LIST
+                  ================================================= */
+
+                  <View className="pb-4">
+                    {addresses.map(
+                      (
+                        address: Address
+                      ) => {
+                        const isSelected =
+                          selectedAddress?.id ===
+                          address.id;
+
+                        return (
+                          <TouchableOpacity
+                            key={
+                              address.id
+                            }
+                            activeOpacity={
+                              0.9
+                            }
+                            onPress={() =>
+                              setSelectedAddress(
+                                address
+                              )
+                            }
+                            className={`
+                              rounded-[30px]
+                              p-5
+                              mb-4
+                              ${
+                                isSelected
+                                  ? "bg-[#D9F26A]"
+                                  : "bg-[#F3F4F6]"
+                              }
+                            `}
+                          >
+                            {/* TOP */}
+
+                            <View
+                              className="
+                                flex-row
+                                justify-between
+                                items-start
+                              "
+                            >
+                              {/* LEFT */}
+
+                              <View className="flex-1 pr-4">
+                                {/* LABEL */}
+
                                 <View
                                   className="
-                                    bg-primary/20
-                                    rounded-full
-                                    px-3
-                                    py-1
+                                    flex-row
+                                    items-center
+                                    flex-wrap
+                                    mb-3
                                   "
                                 >
                                   <Text
-                                    className="
-                                      text-primary
-                                      text-xs
-                                      font-semibold
-                                    "
+                                    className={`
+                                      text-[18px]
+                                      font-black
+                                      mr-2
+                                      ${
+                                        isSelected
+                                          ? "text-black"
+                                          : "text-black"
+                                      }
+                                    `}
                                   >
-                                    Default
+                                    {address.label ||
+                                      "Address"}
                                   </Text>
+
+                                  {address.isDefault && (
+                                    <View
+                                      className={`
+                                        px-3
+                                        py-1
+                                        rounded-full
+                                        ${
+                                          isSelected
+                                            ? "bg-black"
+                                            : "bg-white"
+                                        }
+                                      `}
+                                    >
+                                      <Text
+                                        className={`
+                                          text-xs
+                                          font-bold
+                                          ${
+                                            isSelected
+                                              ? "text-white"
+                                              : "text-black"
+                                          }
+                                        `}
+                                      >
+                                        Default
+                                      </Text>
+                                    </View>
+                                  )}
                                 </View>
-                              )}
+
+                                {/* NAME */}
+
+                                <Text
+                                  className="
+                                    text-black
+                                    font-bold
+                                    text-[17px]
+                                    mb-2
+                                  "
+                                >
+                                  {
+                                    address.fullName
+                                  }
+                                </Text>
+
+                                {/* ADDRESS */}
+
+                                <Text
+                                  className="
+                                    text-[#4B5563]
+                                    text-[15px]
+                                    leading-7
+                                  "
+                                >
+                                  {
+                                    address.streetAddress
+                                  }
+                                </Text>
+
+                                <Text
+                                  className="
+                                    text-[#4B5563]
+                                    text-[15px]
+                                    leading-7
+                                  "
+                                >
+                                  {
+                                    address.city
+                                  }
+                                  ,{" "}
+                                  {
+                                    address.state
+                                  }{" "}
+                                  {
+                                    address.zipCode
+                                  }
+                                </Text>
+
+                                {/* PHONE */}
+
+                                <Text
+                                  className="
+                                    text-[#6B7280]
+                                    mt-3
+                                    text-sm
+                                    font-medium
+                                  "
+                                >
+                                  {
+                                    address.phoneNumber
+                                  }
+                                </Text>
+                              </View>
+
+                              {/* CHECK */}
+
+                              <View
+                                className={`
+                                  w-12
+                                  h-12
+                                  rounded-full
+                                  items-center
+                                  justify-center
+                                  ${
+                                    isSelected
+                                      ? "bg-black"
+                                      : "bg-white"
+                                  }
+                                `}
+                              >
+                                <Ionicons
+                                  name={
+                                    isSelected
+                                      ? "checkmark"
+                                      : "location-outline"
+                                  }
+                                  size={
+                                    22
+                                  }
+                                  color={
+                                    isSelected
+                                      ? "#D9F26A"
+                                      : "#111"
+                                  }
+                                />
+                              </View>
                             </View>
-
-                            {/* NAME */}
-
-                            <Text className="text-text-primary font-semibold text-lg mb-2">
-                              {
-                                address.fullName
-                              }
-                            </Text>
-
-                            {/* STREET */}
-
-                            <Text className="text-text-secondary text-base leading-6 mb-1">
-                              {
-                                address.streetAddress
-                              }
-                            </Text>
-
-                            {/* CITY */}
-
-                            <Text className="text-text-secondary text-base mb-2">
-                              {
-                                address.city
-                              }
-                              ,{" "}
-                              {
-                                address.state
-                              }{" "}
-                              {
-                                address.zipCode
-                              }
-                            </Text>
-
-                            {/* PHONE */}
-
-                            <Text className="text-text-secondary text-base">
-                              {
-                                address.phoneNumber
-                              }
-                            </Text>
-                          </View>
-
-                          {/* CHECKMARK */}
-
-                          {isSelected && (
-                            <View
-                              className="
-                                bg-primary
-                                rounded-full
-                                p-2
-                                ml-3
-                              "
-                            >
-                              <Ionicons
-                                name="checkmark"
-                                size={22}
-                                color="#121212"
-                              />
-                            </View>
-                          )}
-                        </View>
-                      </TouchableOpacity>
-                    );
-                  }
+                          </TouchableOpacity>
+                        );
+                      }
+                    )}
+                  </View>
                 )}
-              </View>
-            )}
-          </ScrollView>
+              </ScrollView>
 
-          {/* =================================================
-             FOOTER
-          ================================================= */}
+              {/* =================================================
+                 FOOTER
+              ================================================= */}
 
-          <View
-            className="
-              p-6
-              border-t
-              border-surface
-            "
-          >
-            <TouchableOpacity
-              className={`rounded-2xl py-5 ${
-                selectedAddress
-                  ? "bg-primary"
-                  : "bg-surface"
-              }`}
-              activeOpacity={0.9}
-              onPress={() => {
-                if (
-                  selectedAddress
-                ) {
-                  onProceed(
-                    selectedAddress
-                  );
-                }
-              }}
-              disabled={
-                !selectedAddress ||
-                isProcessing
-              }
-            >
               <View
                 className="
-                  flex-row
-                  items-center
-                  justify-center
+                  px-6
+                  pt-4
+                  pb-8
+                  bg-white
                 "
+                style={{
+                  borderTopWidth: 1,
+                  borderTopColor:
+                    "#F3F4F6",
+                }}
               >
-                {isProcessing ? (
-                  <ActivityIndicator
-                    size="small"
-                    color="#121212"
-                  />
-                ) : (
-                  <>
-                    <Text
-                      className={`
-                        font-bold
-                        text-lg
-                        mr-2
-                        ${
-                          selectedAddress
-                            ? "text-background"
-                            : "text-text-secondary"
-                        }
-                      `}
-                    >
-                      Continue to
-                      Payment
-                    </Text>
-
-                    <Ionicons
-                      name="arrow-forward"
-                      size={20}
-                      color={
+                <TouchableOpacity
+                  activeOpacity={
+                    0.9
+                  }
+                  onPress={() => {
+                    if (
+                      selectedAddress
+                    ) {
+                      onProceed(
                         selectedAddress
-                          ? "#121212"
-                          : "#666"
-                      }
+                      );
+                    }
+                  }}
+                  disabled={
+                    !selectedAddress ||
+                    isProcessing
+                  }
+                  className={`
+                    rounded-[28px]
+                    py-5
+                    items-center
+                    justify-center
+                    ${
+                      selectedAddress
+                        ? "bg-[#D9F26A]"
+                        : "bg-[#E5E7EB]"
+                    }
+                  `}
+                >
+                  {isProcessing ? (
+                    <ActivityIndicator
+                      size="small"
+                      color="#111"
                     />
-                  </>
-                )}
+                  ) : (
+                    <View
+                      className="
+                        flex-row
+                        items-center
+                      "
+                    >
+                      <Text
+                        className={`
+                          text-[17px]
+                          font-black
+                          mr-3
+                          ${
+                            selectedAddress
+                              ? "text-black"
+                              : "text-[#888]"
+                          }
+                        `}
+                      >
+                        Continue to Payment
+                      </Text>
+
+                      <Ionicons
+                        name="arrow-forward"
+                        size={20}
+                        color={
+                          selectedAddress
+                            ? "#111"
+                            : "#888"
+                        }
+                      />
+                    </View>
+                  )}
+                </TouchableOpacity>
               </View>
-            </TouchableOpacity>
-          </View>
+            </View>
+          </TouchableWithoutFeedback>
         </View>
-      </View>
+      </TouchableWithoutFeedback>
     </Modal>
   );
 };

@@ -48,203 +48,270 @@ export default function AddressCard({
   return (
     <View
       className="
-        bg-surface
-        rounded-3xl
+        bg-[#F3F4F6]
+        rounded-[34px]
         p-5
-        mb-3
-        border
-        border-border
+        mb-5
       "
+      style={{
+        shadowColor: "#000",
+        shadowOffset: {
+          width: 0,
+          height: 6,
+        },
+        shadowOpacity: 0.05,
+        shadowRadius: 12,
+        elevation: 3,
+      }}
     >
       {/* =================================================
          HEADER
       ================================================= */}
 
-      <View className="flex-row items-center justify-between mb-4">
+      <View
+        className="
+          flex-row
+          items-start
+          justify-between
+        "
+      >
         {/* LEFT */}
 
-        <View className="flex-row items-center flex-1">
+        <View className="flex-row flex-1 pr-4">
           {/* ICON */}
 
           <View
             className="
-              bg-primary/20
-              rounded-full
-              w-12
-              h-12
+              w-14
+              h-14
+              rounded-[20px]
+              bg-[#D9F26A]
               items-center
               justify-center
-              mr-3
+              mr-4
             "
           >
             <Ionicons
               name="location"
               size={24}
-              color="#1DB954"
+              color="#111"
             />
           </View>
 
-          {/* LABEL */}
+          {/* TEXT */}
 
           <View className="flex-1">
+            {/* LABEL */}
+
+            <View
+              className="
+                flex-row
+                items-center
+                flex-wrap
+                mb-2
+              "
+            >
+              <Text
+                numberOfLines={1}
+                className="
+                  text-black
+                  text-[20px]
+                  font-black
+                  mr-2
+                "
+              >
+                {address.label ||
+                  "Shipping Address"}
+              </Text>
+
+              {address.isDefault && (
+                <View
+                  className="
+                    bg-black
+                    px-3
+                    py-1
+                    rounded-full
+                  "
+                >
+                  <Text
+                    className="
+                      text-[#D9F26A]
+                      text-[10px]
+                      font-black
+                    "
+                  >
+                    DEFAULT
+                  </Text>
+                </View>
+              )}
+            </View>
+
+            {/* SUBTEXT */}
+
             <Text
               className="
-                text-text-primary
-                font-bold
-                text-lg
+                text-[#6B7280]
+                text-sm
               "
-              numberOfLines={1}
             >
-              {address.label ||
-                "Address"}
-            </Text>
-
-            <Text className="text-text-secondary text-xs mt-1">
-              Shipping Address
+              Delivery destination
             </Text>
           </View>
         </View>
-
-        {/* DEFAULT BADGE */}
-
-        {address.isDefault && (
-          <View
-            className="
-              bg-primary
-              px-3
-              py-1
-              rounded-full
-            "
-          >
-            <Text
-              className="
-                text-background
-                text-xs
-                font-bold
-              "
-            >
-              Default
-            </Text>
-          </View>
-        )}
       </View>
 
       {/* =================================================
-         ADDRESS INFO
+         ADDRESS CONTENT
       ================================================= */}
 
-      <View className="ml-[60px]">
+      <View className="mt-6">
         {/* NAME */}
 
         <Text
           className="
-            text-text-primary
-            font-semibold
-            mb-1
+            text-black
+            text-[17px]
+            font-black
+            mb-3
           "
         >
-          {
-            address.fullName
-          }
+          {address.fullName}
         </Text>
 
         {/* STREET */}
 
         <Text
           className="
-            text-text-secondary
-            text-sm
-            mb-1
+            text-[#4B5563]
+            text-[15px]
+            leading-7
           "
         >
-          {
-            address.streetAddress
-          }
+          {address.streetAddress}
         </Text>
 
         {/* CITY */}
 
         <Text
           className="
-            text-text-secondary
-            text-sm
-            mb-2
+            text-[#6B7280]
+            text-[15px]
+            mt-2
+            leading-7
           "
         >
           {address.city},{" "}
           {address.state}{" "}
-          {
-            address.zipCode
-          }
+          {address.zipCode}
         </Text>
 
         {/* PHONE */}
 
-        <Text
+        <View
           className="
-            text-text-secondary
-            text-sm
+            flex-row
+            items-center
+            mt-5
           "
         >
-          {
-            address.phoneNumber
-          }
-        </Text>
+          <View
+            className="
+              w-10
+              h-10
+              rounded-full
+              bg-white
+              items-center
+              justify-center
+              mr-3
+            "
+          >
+            <Ionicons
+              name="call-outline"
+              size={18}
+              color="#111"
+            />
+          </View>
+
+          <Text
+            className="
+              text-[#374151]
+              text-sm
+              font-semibold
+            "
+          >
+            {address.phoneNumber}
+          </Text>
+        </View>
       </View>
+
+      {/* =================================================
+         DIVIDER
+      ================================================= */}
+
+      <View
+        className="
+          h-[1px]
+          bg-[#E5E7EB]
+          my-6
+        "
+      />
 
       {/* =================================================
          ACTIONS
       ================================================= */}
 
-      <View className="flex-row mt-5 gap-3">
+      <View className="flex-row gap-4">
         {/* EDIT */}
 
         <TouchableOpacity
-          className="
-            flex-1
-            bg-primary/20
-            py-3
-            rounded-2xl
-            items-center
-            justify-center
-          "
-          activeOpacity={0.7}
+          activeOpacity={0.9}
           onPress={() =>
             onEdit(address)
           }
           disabled={
             isUpdatingAddress
           }
+          className="
+            flex-1
+            bg-[#D9F26A]
+            py-4
+            rounded-[24px]
+            items-center
+            justify-center
+            flex-row
+          "
         >
           {isUpdatingAddress ? (
             <ActivityIndicator
               size="small"
-              color="#1DB954"
+              color="#111"
             />
           ) : (
-            <Text
-              className="
-                text-primary
-                font-bold
-              "
-            >
-              Edit
-            </Text>
+            <>
+              <Ionicons
+                name="create-outline"
+                size={18}
+                color="#111"
+              />
+
+              <Text
+                className="
+                  text-black
+                  font-black
+                  text-[15px]
+                  ml-2
+                "
+              >
+                Edit
+              </Text>
+            </>
           )}
         </TouchableOpacity>
 
         {/* DELETE */}
 
         <TouchableOpacity
-          className="
-            flex-1
-            bg-red-500/20
-            py-3
-            rounded-2xl
-            items-center
-            justify-center
-          "
-          activeOpacity={0.7}
+          activeOpacity={0.9}
           onPress={() =>
             onDelete(
               address.id || "",
@@ -255,6 +322,15 @@ export default function AddressCard({
           disabled={
             isDeletingAddress
           }
+          className="
+            flex-1
+            bg-white
+            py-4
+            rounded-[24px]
+            items-center
+            justify-center
+            flex-row
+          "
         >
           {isDeletingAddress ? (
             <ActivityIndicator
@@ -262,14 +338,24 @@ export default function AddressCard({
               color="#EF4444"
             />
           ) : (
-            <Text
-              className="
-                text-red-500
-                font-bold
-              "
-            >
-              Delete
-            </Text>
+            <>
+              <Ionicons
+                name="trash-outline"
+                size={18}
+                color="#EF4444"
+              />
+
+              <Text
+                className="
+                  text-[#EF4444]
+                  font-black
+                  text-[15px]
+                  ml-2
+                "
+              >
+                Remove
+              </Text>
+            </>
           )}
         </TouchableOpacity>
       </View>

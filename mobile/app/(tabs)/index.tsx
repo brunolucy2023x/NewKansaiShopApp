@@ -1,60 +1,80 @@
 import ProductsGrid from "@/components/ProductsGrid";
-
 import SafeScreen from "@/components/SafeScreen";
-
 import useProducts from "@/hooks/useProducts";
 
-import { Ionicons } from "@expo/vector-icons";
 
-import {
-  useMemo,
-  useState,
-} from "react";
+import TopNavigation from "@/components/TopNavigation";
+
+
+import { Ionicons, MaterialIcons } from "@expo/vector-icons";
+import { useMemo, useState } from "react";
 
 import {
   View,
   Text,
-  ScrollView,
   TouchableOpacity,
   TextInput,
-  Image,
   ActivityIndicator,
+  StatusBar,
+  FlatList,
+  Image,
+  ScrollView,
 } from "react-native";
 
 /* =========================================================
-   CATEGORIES
+   BANNERS
 ========================================================= */
 
-const CATEGORIES = [
+const bannerA = require("../../assets/images/bannera.png");
+const bannerB = require("../../assets/images/bannerb.png");
+const bannerC = require("../../assets/images/bannerc.png");
+const bannerD = require("../../assets/images/bannerd.png");
+const bannerE = require("../../assets/images/bannere.png");
+const bannerF = require("../../assets/images/bannerf.png");
+const bannerG = require("../../assets/images/bannerg.png");
+
+/* =========================================================
+   FEATURE CARDS
+========================================================= */
+
+const features = [
   {
-    name: "All",
-
-    icon: "grid-outline" as const,
+    title: "Fast Delivery",
+    icon: "local-shipping",
+    bg: "#EEF2FF",
+    color: "#4338CA",
   },
-
   {
-    name: "Electronics",
-
-    image: require("@/assets/images/electronics.png"),
+    title: "Secure Payment",
+    icon: "security",
+    bg: "#ECFDF5",
+    color: "#059669",
   },
-
   {
-    name: "Fashion",
-
-    image: require("@/assets/images/fashion.png"),
+    title: "Verified Suppliers",
+    icon: "verified",
+    bg: "#FEF3C7",
+    color: "#D97706",
   },
-
   {
-    name: "Sports",
-
-    image: require("@/assets/images/sports.png"),
+    title: "Bulk Discounts",
+    icon: "discount",
+    bg: "#FEE2E2",
+    color: "#DC2626",
   },
+];
 
-  {
-    name: "Books",
+/* =========================================================
+   DEAL BANNERS
+========================================================= */
 
-    image: require("@/assets/images/books.png"),
-  },
+const dealBanners = [
+  bannerB,
+  bannerC,
+  bannerD,
+  bannerE,
+  bannerF,
+  bannerG,
 ];
 
 /* =========================================================
@@ -62,82 +82,69 @@ const CATEGORIES = [
 ========================================================= */
 
 const ShopScreen = () => {
-  /* =====================================================
-     STATE
-  ===================================================== */
-
-  const [searchQuery, setSearchQuery] =
-    useState("");
-
-  const [
-    selectedCategory,
-    setSelectedCategory,
-  ] = useState("All");
-
-  /* =====================================================
-     PRODUCTS
-     SUPABASE CONNECTED
-  ===================================================== */
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("All");
 
   const {
     data: products = [],
-
     isLoading,
-
     isError,
   } = useProducts();
+
+  /* =====================================================
+     CATEGORIES
+  ===================================================== */
+
+  const categories = useMemo(() => {
+    const uniqueCategories = [
+      ...new Set(products.map((p: any) => p.category).filter(Boolean)),
+    ];
+
+    return [
+      { name: "All", icon: "apps-outline" as const },
+      ...uniqueCategories.map((category: string) => ({
+        name: category,
+        icon:
+          category === "Paints"
+            ? "color-fill-outline"
+            : category === "Deformed Bars"
+            ? "hammer-outline"
+            : category === "Cement"
+            ? "cube-outline"
+            : category === "Wire Products"
+            ? "git-network-outline"
+            : category === "Doors & Windows"
+            ? "home-outline"
+            : category === "Construction Equipment"
+            ? "construct-outline"
+            : category === "Brushes & Rollers"
+            ? "brush-outline"
+            : "grid-outline",
+      })),
+    ];
+  }, [products]);
 
   /* =====================================================
      FILTER PRODUCTS
   ===================================================== */
 
-  const filteredProducts =
-    useMemo(() => {
-      if (!products) return [];
+  const filteredProducts = useMemo(() => {
+    let filtered = [...products];
 
-      let filtered = [...products];
+    if (selectedCategory !== "All") {
+      filtered = filtered.filter(
+        (p: any) => p.category === selectedCategory
+      );
+    }
 
-      /* ===============================================
-         CATEGORY FILTER
-      =============================================== */
+    if (searchQuery.trim()) {
+      filtered = filtered.filter((p: any) =>
+        p.name?.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
 
-      if (
-        selectedCategory !== "All"
-      ) {
-        filtered =
-          filtered.filter(
-            (product: any) =>
-              product.category ===
-              selectedCategory
-          );
-      }
-
-      /* ===============================================
-         SEARCH FILTER
-      =============================================== */
-
-      if (
-        searchQuery.trim()
-      ) {
-        filtered =
-          filtered.filter(
-            (product: any) =>
-              product.name
-                ?.toLowerCase()
-                .includes(
-                  searchQuery.toLowerCase()
-                )
-          );
-      }
-
-      return filtered;
-    }, [
-      products,
-
-      selectedCategory,
-
-      searchQuery,
-    ]);
+    return filtered;
+  }, [products, selectedCategory, searchQuery]);
 
   /* =====================================================
      LOADING
@@ -146,16 +153,7 @@ const ShopScreen = () => {
   if (isLoading) {
     return (
       <SafeScreen>
-        <View className="flex-1 items-center justify-center">
-          <ActivityIndicator
-            size="large"
-            color="#1DB954"
-          />
-
-          <Text className="text-text-secondary mt-4">
-            Loading products...
-          </Text>
-        </View>
+        <LoadingUI />
       </SafeScreen>
     );
   }
@@ -167,198 +165,348 @@ const ShopScreen = () => {
   if (isError) {
     return (
       <SafeScreen>
-        <View className="flex-1 items-center justify-center px-6">
-          <Ionicons
-            name="alert-circle-outline"
-            size={70}
-            color="#EF4444"
-          />
-
-          <Text className="text-text-primary text-xl font-bold mt-4">
-            Failed to load products
-          </Text>
-
-          <Text className="text-text-secondary text-center mt-2">
-            Please check your internet
-            connection and try again.
-          </Text>
-        </View>
+        <ErrorUI />
       </SafeScreen>
     );
   }
 
-  return (
-    <SafeScreen>
-      <ScrollView
-        className="flex-1"
-        contentContainerStyle={{
-          paddingBottom: 100,
-        }}
-        showsVerticalScrollIndicator={
-          false
-        }
-      >
-        {/* =================================================
-           HEADER
-        ================================================= */}
+  /* =====================================================
+     HEADER
+  ===================================================== */
 
-        <View className="px-6 pb-4 pt-6">
-          <View className="flex-row items-center justify-between mb-6">
-            {/* TITLE */}
+  const Header = () => (
+    <>
+      <StatusBar
+        barStyle="dark-content"
+        backgroundColor="#F8FAFC"
+      />
 
-            <View>
-              <Text className="text-text-primary text-3xl font-bold tracking-tight">
-                Shop
+
+
+      {/* TOP BAR */}
+      <View className="px-6 pt-5 flex-row items-center justify-between">
+        <View>
+          <Text className="text-[#94A3B8] text-sm font-medium">
+            Best Building Materials
+          </Text>
+
+          <Text className="text-[#0F172A] text-[34px] font-black mt-1">
+            Marketplace
+          </Text>
+        </View>
+
+        <TouchableOpacity className="w-14 h-14 rounded-full bg-white items-center justify-center border border-[#E2E8F0]">
+          <Ionicons
+            name="cart-outline"
+            size={26}
+            color="#0F172A"
+          />
+        </TouchableOpacity>
+      </View>
+
+      {/* SEARCH CARD */}
+      <View className="px-6 mt-7">
+        <View className="bg-white rounded-[26px] px-5 py-5 border border-[#E2E8F0] flex-row items-center">
+          <Ionicons
+            name="search-outline"
+            size={24}
+            color="#64748B"
+          />
+
+          <TextInput
+            placeholder="Search products..."
+            placeholderTextColor="#94A3B8"
+            className="flex-1 ml-4 text-[#0F172A] text-[15px]"
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+          />
+
+          <TouchableOpacity className="bg-[#0F172A] w-11 h-11 rounded-full items-center justify-center">
+            <Ionicons
+              name="options-outline"
+              size={20}
+              color="#fff"
+            />
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      {/* HERO SECTION */}
+      <View className="px-6 mt-7">
+        <View className="bg-[#0F172A] rounded-[34px] overflow-hidden">
+          <Image
+            source={bannerA}
+            resizeMode="cover"
+            className="w-full h-[260px]"
+          />
+
+          <View className="absolute top-0 left-0 right-0 bottom-0 bg-black/30" />
+
+          <View className="absolute bottom-0 left-0 right-0 p-7">
+            <Text className="text-[#D9F26A] text-sm font-bold">
+              SPECIAL OFFERS
+            </Text>
+
+            <Text className="text-white text-[34px] font-black mt-2">
+              Construction
+            </Text>
+
+            <Text className="text-white text-[34px] font-black -mt-2">
+              Mega Sale
+            </Text>
+
+            <TouchableOpacity className="mt-5 bg-[#D9F26A] self-start px-6 py-4 rounded-full">
+              <Text className="text-black font-black">
+                Shop Deals
               </Text>
-
-              <Text className="text-text-secondary text-sm mt-1">
-                Browse all products
-              </Text>
-            </View>
-
-            {/* FILTER BTN */}
-
-            <TouchableOpacity
-              className="bg-surface/50 p-3 rounded-full"
-              activeOpacity={0.7}
-            >
-              <Ionicons
-                name="options-outline"
-                size={22}
-                color={"#fff"}
-              />
             </TouchableOpacity>
           </View>
-
-          {/* =============================================
-             SEARCH BAR
-          ============================================= */}
-
-          <View className="bg-surface flex-row items-center px-5 py-4 rounded-2xl">
-            <Ionicons
-              color={"#666"}
-              size={22}
-              name="search"
-            />
-
-            <TextInput
-              placeholder="Search for products"
-              placeholderTextColor={
-                "#666"
-              }
-              className="flex-1 ml-3 text-base text-text-primary"
-              value={searchQuery}
-              onChangeText={
-                setSearchQuery
-              }
-            />
-          </View>
         </View>
+      </View>
 
-        {/* =================================================
-           CATEGORY FILTER
-        ================================================= */}
+      {/* FEATURE GRID */}
+      <View className="px-6 mt-8">
+        <View className="flex-row flex-wrap justify-between">
+          {features.map((item, index) => (
+            <TouchableOpacity
+              key={index}
+              activeOpacity={0.9}
+              className="w-[48%] rounded-[28px] p-5 mb-4"
+              style={{
+                backgroundColor: item.bg,
+              }}
+            >
+              <View
+                className="w-14 h-14 rounded-full items-center justify-center"
+                style={{
+                  backgroundColor: item.color,
+                }}
+              >
+                <MaterialIcons
+                  name={item.icon as any}
+                  size={28}
+                  color="#fff"
+                />
+              </View>
 
-        <View className="mb-6">
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={
-              false
-            }
-            contentContainerStyle={{
-              paddingHorizontal: 20,
-            }}
-          >
-            {CATEGORIES.map(
-              (category) => {
-                const isSelected =
-                  selectedCategory ===
-                  category.name;
-
-                return (
-                  <TouchableOpacity
-                    key={
-                      category.name
-                    }
-                    onPress={() =>
-                      setSelectedCategory(
-                        category.name
-                      )
-                    }
-                    className={`mr-3 rounded-2xl size-20 overflow-hidden items-center justify-center ${
-                      isSelected
-                        ? "bg-primary"
-                        : "bg-surface"
-                    }`}
-                    activeOpacity={0.8}
-                  >
-                    {/* ICON CATEGORY */}
-
-                    {category.icon ? (
-                      <Ionicons
-                        name={
-                          category.icon
-                        }
-                        size={36}
-                        color={
-                          isSelected
-                            ? "#121212"
-                            : "#fff"
-                        }
-                      />
-                    ) : (
-                      /* IMAGE CATEGORY */
-
-                      <Image
-                        source={
-                          category.image
-                        }
-                        className="size-12"
-                        resizeMode="contain"
-                      />
-                    )}
-                  </TouchableOpacity>
-                );
-              }
-            )}
-          </ScrollView>
+              <Text className="text-[#0F172A] font-black text-[15px] mt-4">
+                {item.title}
+              </Text>
+            </TouchableOpacity>
+          ))}
         </View>
+      </View>
 
-        {/* =================================================
-           PRODUCTS
-        ================================================= */}
-
-        <View className="px-6 mb-6">
-          <View className="flex-row items-center justify-between mb-4">
-            <Text className="text-text-primary text-lg font-bold">
-              Products
+      {/* TODAY DEALS */}
+      <View className="mt-6">
+        <View className="px-6 flex-row items-center justify-between">
+          <View>
+            <Text className="text-[#0F172A] text-[30px] font-black">
+              Today's Deals
             </Text>
 
-            <Text className="text-text-secondary text-sm">
-              {
-                filteredProducts.length
-              }{" "}
-              items
+            <Text className="text-[#64748B] mt-1">
+              Save more on top products
             </Text>
           </View>
 
-          {/* =============================================
-             PRODUCTS GRID
-          ============================================= */}
-
-          <ProductsGrid
-            products={
-              filteredProducts
-            }
-            isLoading={
-              isLoading
-            }
-            isError={isError}
-          />
+          <TouchableOpacity>
+            <Text className="text-[#0F172A] font-black">
+              See All
+            </Text>
+          </TouchableOpacity>
         </View>
-      </ScrollView>
+
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={{
+            paddingLeft: 24,
+            paddingTop: 22,
+          }}
+        >
+          {dealBanners.map((banner, index) => (
+            <TouchableOpacity
+              key={index}
+              activeOpacity={0.9}
+              className="mr-5"
+            >
+              <View className="bg-white rounded-[30px] overflow-hidden border border-[#E2E8F0]">
+                <Image
+                  source={banner}
+                  resizeMode="cover"
+                  className="w-[280px] h-[170px]"
+                />
+
+                <View className="p-5">
+                  <View className="flex-row items-center justify-between">
+                    <Text className="text-[#0F172A] text-[18px] font-black">
+                      Flash Offer
+                    </Text>
+
+                    <View className="bg-[#D9F26A] px-3 py-2 rounded-full">
+                      <Text className="text-black text-xs font-black">
+                        -30%
+                      </Text>
+                    </View>
+                  </View>
+
+                  <Text className="text-[#64748B] mt-2">
+                    Wholesale prices available today
+                  </Text>
+                </View>
+              </View>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      </View>
+
+      {/* CATEGORIES */}
+      <View className="mt-10 px-6 mb-5">
+        <Text className="text-[#0F172A] text-[30px] font-black">
+          Categories
+        </Text>
+      </View>
+
+      <FlatList
+        horizontal
+        data={categories}
+        keyExtractor={(item) => item.name}
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={{
+          paddingHorizontal: 24,
+        }}
+        renderItem={({ item }) => {
+          const isSelected = selectedCategory === item.name;
+
+          return (
+            <TouchableOpacity
+              onPress={() => setSelectedCategory(item.name)}
+              className={`mr-4 rounded-[24px] px-5 py-5 items-center ${
+                isSelected
+                  ? "bg-[#0F172A]"
+                  : "bg-white border border-[#E2E8F0]"
+              }`}
+              style={{
+                width: 110,
+              }}
+            >
+              <View
+                className={`w-14 h-14 rounded-full items-center justify-center ${
+                  isSelected
+                    ? "bg-[#D9F26A]"
+                    : "bg-[#F8FAFC]"
+                }`}
+              >
+                <Ionicons
+                  name={item.icon}
+                  size={28}
+                  color="#0F172A"
+                />
+              </View>
+
+              <Text
+                className={`text-xs font-black text-center mt-4 ${
+                  isSelected
+                    ? "text-white"
+                    : "text-[#334155]"
+                }`}
+              >
+                {item.name}
+              </Text>
+            </TouchableOpacity>
+          );
+        }}
+      />
+
+      {/* PRODUCTS HEADER */}
+      <View className="mt-12 px-6 mb-7 flex-row items-center justify-between">
+        <View>
+          <Text className="text-[#0F172A] text-[30px] font-black">
+            Trending Products
+          </Text>
+
+          <Text className="text-[#64748B] mt-1">
+            {filteredProducts.length} items available
+          </Text>
+        </View>
+
+        <TouchableOpacity className="bg-[#D9F26A] px-5 py-4 rounded-full">
+          <Text className="text-black font-black">
+            Explore
+          </Text>
+        </TouchableOpacity>
+      </View>
+    </>
+  );
+
+  /* =====================================================
+     MAIN
+  ===================================================== */
+
+  return (
+    <SafeScreen>
+      <View className="flex-1 bg-[#F8FAFC]">
+
+
+      <TopNavigation />
+
+        <FlatList
+          data={filteredProducts}
+          keyExtractor={(item) => item.id.toString()}
+          numColumns={2}
+          columnWrapperStyle={{
+            justifyContent: "space-between",
+            paddingHorizontal: 16,
+          }}
+          renderItem={({ item }) => (
+            <ProductsGrid
+              products={[item]}
+              isLoading={false}
+              isError={false}
+            />
+          )}
+          ListHeaderComponent={<Header />}
+          contentContainerStyle={{
+            paddingBottom: 120,
+          }}
+          showsVerticalScrollIndicator={false}
+        />
+      </View>
     </SafeScreen>
   );
 };
 
 export default ShopScreen;
+
+/* =========================================================
+   LOADING UI
+========================================================= */
+
+function LoadingUI() {
+  return (
+    <View className="flex-1 items-center justify-center bg-[#F8FAFC]">
+      <ActivityIndicator size="large" color="#0F172A" />
+    </View>
+  );
+}
+
+/* =========================================================
+   ERROR UI
+========================================================= */
+
+function ErrorUI() {
+  return (
+    <View className="flex-1 items-center justify-center px-8 bg-[#F8FAFC]">
+      <Ionicons
+        name="cloud-offline-outline"
+        size={54}
+        color="#EF4444"
+      />
+
+      <Text className="text-[#0F172A] text-[22px] font-black mt-4">
+        Failed to load products
+      </Text>
+    </View>
+  );
+}

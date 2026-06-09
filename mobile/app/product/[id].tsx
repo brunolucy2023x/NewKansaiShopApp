@@ -1,5 +1,7 @@
+// mobile/app/product/[id].tsx
 import SafeScreen from "@/components/SafeScreen";
 import useCart from "@/hooks/useCart";
+import useProducts from "@/hooks/useProducts";
 import { useProduct } from "@/hooks/useProduct";
 import useWishlist from "@/hooks/useWishlist";
 import { Ionicons } from "@expo/vector-icons";
@@ -9,262 +11,371 @@ import { useState } from "react";
 import {
   View,
   Text,
-  Alert,
-  ActivityIndicator,
-  TouchableOpacity,
   ScrollView,
+  TouchableOpacity,
+  ActivityIndicator,
   Dimensions,
+  Alert,
+  Share,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const { width } = Dimensions.get("window");
 
-const ProductDetailScreen = () => {
+export default function ProductDetailScreen() {
+  const insets = useSafeAreaInsets();
+
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { data: product, isError, isLoading } = useProduct(id);
+  const { data: product, isLoading, isError } = useProduct(id);
+  const { data: products } = useProducts();
+
   const { addToCart, isAddingToCart } = useCart();
+  const { isInWishlist, toggleWishlist } = useWishlist();
 
-  const { isInWishlist, toggleWishlist, isAddingToWishlist, isRemovingFromWishlist } =
-    useWishlist();
+  const [qty, setQty] = useState(1);
+  const [selectedImage, setSelectedImage] = useState(0);
 
-  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
-  const [quantity, setQuantity] = useState(1);
+  if (isLoading) {
+    return (
+      <SafeScreen>
+        <View className="flex-1 items-center justify-center">
+          <ActivityIndicator size="large" />
+        </View>
+      </SafeScreen>
+    );
+  }
+
+  if (isError || !product) {
+    return (
+      <SafeScreen>
+        <View className="flex-1 items-center justify-center">
+          <Text>Product not found</Text>
+        </View>
+      </SafeScreen>
+    );
+  }
+
+  const related =
+    products?.filter((p) => p.id !== product.id).slice(0, 8) || [];
 
   const handleAddToCart = () => {
-    if (!product) return;
     addToCart(
-      { productId: product._id, quantity },
+      { productId: product.id, quantity: qty },
       {
-        onSuccess: () => Alert.alert("Success", `${product.name} added to cart!`),
-        onError: (error: any) => {
-          Alert.alert("Error", error?.response?.data?.error || "Failed to add to cart");
-        },
-      }
+        onSuccess: () =>
+          Alert.alert("Success", "Added to cart"),
+      } as any
     );
   };
 
-  if (isLoading) return <LoadingUI />;
-  if (isError || !product) return <ErrorUI />;
-
-  const inStock = product.stock > 0;
+  const handleShare = async () => {
+    await Share.share({
+      message: product.name,
+    });
+  };
 
   return (
     <SafeScreen>
-      {/* HEADER */}
-      <View className="absolute top-0 left-0 right-0 z-10 px-6 pt-20 pb-4 flex-row items-center justify-between">
-        <TouchableOpacity
-          className="bg-black/50 backdrop-blur-xl w-12 h-12 rounded-full items-center justify-center"
-          onPress={() => router.back()}
-          activeOpacity={0.7}
-        >
-          <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          className={`w-12 h-12 rounded-full items-center justify-center ${
-            isInWishlist(product._id) ? "bg-primary" : "bg-black/50 backdrop-blur-xl"
-          }`}
-          onPress={() => toggleWishlist(product._id)}
-          disabled={isAddingToWishlist || isRemovingFromWishlist}
-          activeOpacity={0.7}
-        >
-          {isAddingToWishlist || isRemovingFromWishlist ? (
-            <ActivityIndicator size="small" color="#FFFFFF" />
-          ) : (
-            <Ionicons
-              name={isInWishlist(product._id) ? "heart" : "heart-outline"}
-              size={24}
-              color={isInWishlist(product._id) ? "#121212" : "#FFFFFF"}
-            />
-          )}
-        </TouchableOpacity>
-      </View>
-
       <ScrollView
-        className="flex-1"
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 100 }}
+        className="flex-1 bg-white"
+        contentContainerStyle={{ paddingBottom: 200 }}
       >
-        {/* IMAGE GALLERY */}
-        <View className="relative">
-          <ScrollView
-            horizontal
-            pagingEnabled
-            showsHorizontalScrollIndicator={false}
-            onScroll={(e) => {
-              const index = Math.round(e.nativeEvent.contentOffset.x / width);
-              setSelectedImageIndex(index);
-            }}
-          >
-            {product.images.map((image: string, index: number) => (
-              <View key={index} style={{ width }}>
-                <Image source={image} style={{ width, height: 400 }} contentFit="cover" />
-              </View>
-            ))}
-          </ScrollView>
+        <View className="px-5 pt-4 flex-row justify-between">
+          <TouchableOpacity onPress={() => router.back()}>
+            <Ionicons name="arrow-back" size={24} />
+          </TouchableOpacity>
 
-          {/* Image Indicators */}
-          <View className="absolute bottom-4 left-0 right-0 flex-row justify-center gap-2">
-            {product.images.map((_: any, index: number) => (
-              <View
-                key={index}
-                className={`h-2 rounded-full ${
-                  index === selectedImageIndex ? "bg-primary w-6" : "bg-white/50 w-2"
-                }`}
+          <View className="flex-row">
+            <TouchableOpacity
+              onPress={handleShare}
+              className="mr-4"
+            >
+              <Ionicons
+                name="share-outline"
+                size={24}
               />
-            ))}
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={() =>
+                toggleWishlist(product.id)
+              }
+            >
+              <Ionicons
+                name={
+                  isInWishlist(product.id)
+                    ? "heart"
+                    : "heart-outline"
+                }
+                size={24}
+              />
+            </TouchableOpacity>
           </View>
         </View>
 
-        {/* PRODUCT INFO */}
-        <View className="p-6">
-          {/* Category */}
-          <View className="flex-row items-center mb-3">
-            <View className="bg-primary/20 px-3 py-1 rounded-full">
-              <Text className="text-primary text-xs font-bold">{product.category}</Text>
-            </View>
-          </View>
+        <View className="items-center">
+          <Image
+            source={{
+              uri:
+                product.images?.[selectedImage] ||
+                "https://placehold.co/600x600",
+            }}
+            style={{
+              width: width * 0.9,
+              height: 320,
+            }}
+            contentFit="contain"
+          />
+        </View>
 
-          {/* Product Name */}
-          <Text className="text-text-primary text-3xl font-bold mb-3">{product.name}</Text>
-
-          {/* Rating & Reviews */}
-          <View className="flex-row items-center mb-4">
-            <View className="flex-row items-center bg-surface px-3 py-2 rounded-full">
-              <Ionicons name="star" size={16} color="#FFC107" />
-              <Text className="text-text-primary font-bold ml-1 mr-2">
-                {product.averageRating.toFixed(1)}
-              </Text>
-              <Text className="text-text-secondary text-sm">({product.totalReviews} reviews)</Text>
-            </View>
-            {inStock ? (
-              <View className="ml-3 flex-row items-center">
-                <View className="w-2 h-2 bg-green-500 rounded-full mr-2" />
-                <Text className="text-green-500 font-semibold text-sm">
-                  {product.stock} in stock
-                </Text>
-              </View>
-            ) : (
-              <View className="ml-3 flex-row items-center">
-                <View className="w-2 h-2 bg-red-500 rounded-full mr-2" />
-                <Text className="text-red-500 font-semibold text-sm">Out of Stock</Text>
-              </View>
-            )}
-          </View>
-
-          {/* Price */}
-          <View className="flex-row items-center mb-6">
-            <Text className="text-primary text-4xl font-bold">${product.price.toFixed(2)}</Text>
-          </View>
-
-          {/* Quantity */}
-          <View className="mb-6">
-            <Text className="text-text-primary text-lg font-bold mb-3">Quantity</Text>
-
-            <View className="flex-row items-center">
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          className="px-5"
+        >
+          {(product.images || []).map(
+            (img, index) => (
               <TouchableOpacity
-                className="bg-surface rounded-full w-12 h-12 items-center justify-center"
-                onPress={() => setQuantity(Math.max(1, quantity - 1))}
-                activeOpacity={0.7}
-                disabled={!inStock}
+                key={index}
+                onPress={() =>
+                  setSelectedImage(index)
+                }
+                className="mr-3"
               >
-                <Ionicons name="remove" size={24} color={inStock ? "#FFFFFF" : "#666"} />
+                <Image
+                  source={{ uri: img }}
+                  style={{
+                    width: 70,
+                    height: 70,
+                  }}
+                />
               </TouchableOpacity>
+            )
+          )}
+        </ScrollView>
 
-              <Text className="text-text-primary text-xl font-bold mx-6">{quantity}</Text>
+        <View className="px-5 mt-4">
+          <Text className="text-[32px] font-black">
+            KSh {product.price}
+          </Text>
 
+          <Text className="text-2xl font-black mt-2">
+            {product.name}
+          </Text>
+
+          <View
+            className={`self-start mt-3 px-4 py-2 rounded-full ${
+              product.stock > 0
+                ? "bg-green-100"
+                : "bg-red-100"
+            }`}
+          >
+            <Text
+              className={`font-bold ${
+                product.stock > 0
+                  ? "text-green-700"
+                  : "text-red-700"
+              }`}
+            >
+              {product.stock > 0
+                ? `${product.stock} In Stock`
+                : "Out of Stock"}
+            </Text>
+          </View>
+
+          <View className="flex-row items-center mt-3">
+            <Ionicons
+              name="star"
+              size={16}
+              color="#f59e0b"
+            />
+            <Text className="ml-2">
+              {product.averageRating}
+            </Text>
+            <Text className="ml-2 text-gray-500">
+              ({product.totalReviews} reviews)
+            </Text>
+          </View>
+        </View>
+
+        <View className="px-5 mt-6">
+          <View className="bg-gray-50 rounded-3xl p-4">
+            <Text className="font-black">
+              Quantity
+            </Text>
+
+            <View className="flex-row justify-between items-center mt-4">
               <TouchableOpacity
-                className="bg-primary rounded-full w-12 h-12 items-center justify-center"
-                onPress={() => setQuantity(Math.min(product.stock, quantity + 1))}
-                activeOpacity={0.7}
-                disabled={!inStock || quantity >= product.stock}
+                onPress={() =>
+                  setQty(Math.max(1, qty - 1))
+                }
               >
                 <Ionicons
-                  name="add"
-                  size={24}
-                  color={!inStock || quantity >= product.stock ? "#666" : "#121212"}
+                  name="remove-circle"
+                  size={38}
+                />
+              </TouchableOpacity>
+
+              <Text className="text-3xl font-black">
+                {qty}
+              </Text>
+
+              <TouchableOpacity
+                onPress={() =>
+                  setQty(
+                    Math.min(
+                      product.stock,
+                      qty + 1
+                    )
+                  )
+                }
+              >
+                <Ionicons
+                  name="add-circle"
+                  size={38}
                 />
               </TouchableOpacity>
             </View>
-
-            {quantity >= product.stock && inStock && (
-              <Text className="text-orange-500 text-sm mt-2">Maximum stock reached</Text>
-            )}
           </View>
 
-          {/* Description */}
-          <View className="mb-8">
-            <Text className="text-text-primary text-lg font-bold mb-3">Description</Text>
-            <Text className="text-text-secondary text-base leading-6">{product.description}</Text>
+          <View className="border rounded-3xl p-4 mt-4">
+            <Text className="font-black">
+              Shipping
+            </Text>
+            <Text className="mt-2">
+              Nairobi, Kenya
+            </Text>
+            <Text>
+              1-3 Day Delivery
+            </Text>
+          </View>
+
+          <View className="border rounded-3xl p-4 mt-4">
+            <Text className="font-black">
+              Return Policy
+            </Text>
+            <Text className="mt-2">
+              7 Day Return Guarantee
+            </Text>
+          </View>
+
+          <View className="border rounded-3xl p-4 mt-4">
+            <Text className="font-black">
+              Shopping Security
+            </Text>
+            <Text>✓ Secure Payment</Text>
+            <Text>✓ Buyer Protection</Text>
+            <Text>✓ Verified Seller</Text>
+          </View>
+
+          <View className="border rounded-3xl p-4 mt-4">
+            <Text className="font-black">
+              PaintHub Official Store
+            </Text>
+            <Text className="text-gray-500 mt-2">
+              Trusted Hardware Supplier
+            </Text>
+            <Text className="text-green-600 mt-2">
+              ✓ Verified Seller
+            </Text>
+          </View>
+
+          <View className="border rounded-3xl p-4 mt-4">
+            <Text className="font-black">
+              Specifications
+            </Text>
+            <Text className="mt-2">
+              Category: {product.category}
+            </Text>
+            <Text>
+              Stock: {product.stock}
+            </Text>
+          </View>
+
+          <View className="mt-8">
+            <Text className="text-xl font-black">
+              Description
+            </Text>
+            <Text className="mt-3 text-gray-600 leading-7">
+              {product.description}
+            </Text>
+          </View>
+
+          <View className="mt-8">
+            <Text className="text-xl font-black mb-4">
+              You May Also Like
+            </Text>
+
+            <ScrollView horizontal>
+              {related.map((item) => (
+                <TouchableOpacity
+                  key={item.id}
+                  onPress={() =>
+                    router.push(
+                      `/product/${item.id}` as any
+                    )
+                  }
+                  className="w-40 mr-4"
+                >
+                  <Image
+                    source={{
+                      uri: item.images?.[0],
+                    }}
+                    style={{
+                      width: 140,
+                      height: 140,
+                    }}
+                  />
+                  <Text numberOfLines={2}>
+                    {item.name}
+                  </Text>
+                  <Text className="font-black">
+                    KSh {item.price}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
           </View>
         </View>
       </ScrollView>
 
-      {/* Bottom Action Bar */}
-      <View className="absolute bottom-0 left-0 right-0 bg-background/95 backdrop-blur-xl border-t border-surface px-6 py-4 pb-8">
-        <View className="flex-row items-center gap-3">
-          <View className="flex-1">
-            <Text className="text-text-secondary text-sm mb-1">Total Price</Text>
-            <Text className="text-primary text-2xl font-bold">
-              ${(product.price * quantity).toFixed(2)}
-            </Text>
-          </View>
+      <View
+        className="absolute left-0 right-0 bg-white border-t px-4 pt-4"
+        style={{
+          bottom: 0,
+          paddingBottom: Math.max(
+            insets.bottom,
+            16
+          ),
+        }}
+      >
+        <View className="flex-row">
           <TouchableOpacity
-            className={`rounded-2xl px-8 py-4 flex-row items-center ${
-              !inStock ? "bg-surface" : "bg-primary"
-            }`}
-            activeOpacity={0.8}
+            className="flex-1 bg-black rounded-2xl py-4 items-center mr-2"
             onPress={handleAddToCart}
-            disabled={!inStock || isAddingToCart}
           >
             {isAddingToCart ? (
-              <ActivityIndicator size="small" color="#121212" />
+              <ActivityIndicator color="#fff" />
             ) : (
-              <>
-                <Ionicons name="cart" size={24} color={!inStock ? "#666" : "#121212"} />
-                <Text
-                  className={`font-bold text-lg ml-2 ${
-                    !inStock ? "text-text-secondary" : "text-background"
-                  }`}
-                >
-                  {!inStock ? "Out of Stock" : "Add to Cart"}
-                </Text>
-              </>
+              <Text className="text-white font-black">
+                Add To Cart
+              </Text>
             )}
           </TouchableOpacity>
+
+          <TouchableOpacity
+            disabled={product.stock <= 0}
+            className={`flex-1 rounded-2xl py-4 items-center ${
+              product.stock > 0
+                ? "bg-[#D9F26A]"
+                : "bg-gray-300"
+            }`}
+          >
+            <Text className="font-black">
+              Buy Now
+            </Text>
+          </TouchableOpacity>
         </View>
-      </View>
-    </SafeScreen>
-  );
-};
-
-export default ProductDetailScreen;
-
-function ErrorUI() {
-  return (
-    <SafeScreen>
-      <View className="flex-1 items-center justify-center px-6">
-        <Ionicons name="alert-circle-outline" size={64} color="#FF6B6B" />
-        <Text className="text-text-primary font-semibold text-xl mt-4">Product not found</Text>
-        <Text className="text-text-secondary text-center mt-2">
-          This product may have been removed or doesn&apos;t exist
-        </Text>
-        <TouchableOpacity
-          className="bg-primary rounded-2xl px-6 py-3 mt-6"
-          onPress={() => router.back()}
-        >
-          <Text className="text-background font-bold">Go Back</Text>
-        </TouchableOpacity>
-      </View>
-    </SafeScreen>
-  );
-}
-
-function LoadingUI() {
-  return (
-    <SafeScreen>
-      <View className="flex-1 items-center justify-center">
-        <ActivityIndicator size="large" color="#1DB954" />
-        <Text className="text-text-secondary mt-4">Loading product...</Text>
       </View>
     </SafeScreen>
   );

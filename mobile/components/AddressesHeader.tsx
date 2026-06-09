@@ -16,66 +16,98 @@ export default function AddressesHeader() {
   return (
     <View
       className="
+        bg-white
         px-6
+        pt-4
         pb-5
-        pt-2
-        border-b
-        border-surface
-        flex-row
-        items-center
-        bg-background
       "
+      style={{
+        borderBottomWidth: 1,
+        borderBottomColor: "#F3F4F6",
+      }}
     >
       {/* =================================================
-         BACK BUTTON
+         TOP ROW
       ================================================= */}
 
-      <TouchableOpacity
-        onPress={() =>
-          router.back()
-        }
+      <View
         className="
-          mr-4
-          w-11
-          h-11
-          rounded-full
-          bg-surface
+          flex-row
           items-center
-          justify-center
         "
-        activeOpacity={0.7}
       >
-        <Ionicons
-          name="arrow-back"
-          size={24}
-          color="#FFFFFF"
-        />
-      </TouchableOpacity>
+        {/* =================================================
+           BACK BUTTON
+        ================================================= */}
 
-      {/* =================================================
-         TITLE
-      ================================================= */}
-
-      <View className="flex-1">
-        <Text
+        <TouchableOpacity
+          activeOpacity={0.8}
+          onPress={() =>
+            router.back()
+          }
           className="
-            text-text-primary
-            text-2xl
-            font-bold
+            w-12
+            h-12
+            rounded-full
+            bg-[#F3F4F6]
+            items-center
+            justify-center
+            mr-4
           "
         >
-          My Addresses
-        </Text>
+          <Ionicons
+            name="arrow-back"
+            size={22}
+            color="#111"
+          />
+        </TouchableOpacity>
 
-        <Text
+        {/* =================================================
+           TITLE SECTION
+        ================================================= */}
+
+        <View className="flex-1">
+          <Text
+            className="
+              text-black
+              text-[30px]
+              font-black
+            "
+          >
+            My Addresses
+          </Text>
+
+          <Text
+            className="
+              text-[#6B7280]
+              text-sm
+              mt-1
+            "
+          >
+            Manage delivery addresses
+          </Text>
+        </View>
+
+        {/* =================================================
+           LOCATION ICON
+        ================================================= */}
+
+        <View
           className="
-            text-text-secondary
-            text-sm
-            mt-1
+            w-12
+            h-12
+            rounded-2xl
+            bg-[#D9F26A]
+            items-center
+            justify-center
           "
         >
-          Manage delivery addresses
-        </Text>
+          <Ionicons
+            name="location-outline"
+            size={22}
+            color="#111"
+          />
+        </View>
       </View>
     </View>
   );

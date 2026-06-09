@@ -1,78 +1,156 @@
-// src/pages/CustomersPage.jsx
-
+import { useState } from "react";
+import { SearchIcon, UsersIcon } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-
 import { supabase } from "../lib/supabase";
 
 function CustomersPage() {
-  const { data: customers = [], isLoading } =
-    useQuery({
-      queryKey: ["customers"],
+  const [search, setSearch] =
+    useState("");
 
-      queryFn: async () => {
-        const { data, error } =
-          await supabase
-            .from("customers")
-            .select("*")
-            .order("created_at", {
-              ascending: false,
-            });
+  const {
+    data: customers = [],
+    isLoading,
+  } = useQuery({
+    queryKey: ["customers"],
 
-        if (error) throw error;
+    queryFn: async () => {
+      const { data, error } =
+        await supabase
+          .from("customers")
+          .select("*")
+          .order("created_at", {
+            ascending: false,
+          });
 
-        return data;
-      },
-    });
+      if (error) throw error;
+
+      return data;
+    },
+  });
+
+  const filteredCustomers =
+    customers.filter((customer) =>
+      `${customer.full_name} ${customer.email}`
+        .toLowerCase()
+        .includes(
+          search.toLowerCase()
+        )
+    );
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">
-          Customers
-        </h1>
-      </div>
+      {/* HEADER */}
 
-      <div className="card bg-base-100 shadow-xl">
-        <div className="card-body">
-          {isLoading ? (
-            <div className="flex justify-center py-10">
-              <span className="loading loading-spinner loading-lg" />
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="table">
-                <thead>
-                  <tr>
-                    <th>Name</th>
-                    <th>Email</th>
-                    <th>Joined</th>
-                  </tr>
-                </thead>
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-2xl font-bold">
+            Customers
+          </h1>
 
-                <tbody>
-                  {customers.map((customer) => (
-                    <tr key={customer.id}>
-                      <td>
-                        {customer.name}
-                      </td>
+          <p className="text-base-content/70">
+            Manage registered users
+          </p>
+        </div>
 
-                      <td>
-                        {customer.email}
-                      </td>
-
-                      <td>
-                        {new Date(
-                          customer.created_at
-                        ).toLocaleDateString()}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
+        <div className="badge badge-primary badge-lg gap-2">
+          <UsersIcon className="w-4 h-4" />
+          {customers.length} Customers
         </div>
       </div>
+
+      {/* SEARCH */}
+
+      <div className="relative">
+        <SearchIcon className="absolute left-4 top-3.5 w-4 h-4 opacity-60" />
+
+        <input
+          type="text"
+          placeholder="Search customer..."
+          className="input input-bordered w-full pl-10"
+          value={search}
+          onChange={(e) =>
+            setSearch(
+              e.target.value
+            )
+          }
+        />
+      </div>
+
+      {/* TABLE */}
+
+      {isLoading ? (
+        <div className="flex justify-center py-20">
+          <span className="loading loading-spinner loading-lg" />
+        </div>
+      ) : filteredCustomers.length ===
+        0 ? (
+        <div className="text-center py-20 opacity-70">
+          No customers found
+        </div>
+      ) : (
+        <div className="overflow-x-auto bg-base-100 rounded-box shadow">
+          <table className="table">
+            <thead>
+              <tr>
+                <th>Customer</th>
+                <th>Email</th>
+                <th>Phone</th>
+                <th>Joined</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {filteredCustomers.map(
+                (customer) => (
+                  <tr
+                    key={customer.id}
+                  >
+                    <td>
+                      <div className="flex items-center gap-3">
+                        <div className="avatar">
+                          <div className="w-12 rounded-full">
+                            <img
+                              src={
+                                customer.avatar ||
+                                "https://ui-avatars.com/api/?name=Customer"
+                              }
+                              alt=""
+                            />
+                          </div>
+                        </div>
+
+                        <div>
+                          <div className="font-bold">
+                            {customer.full_name ||
+                              "Unnamed"}
+                          </div>
+                        </div>
+                      </div>
+                    </td>
+
+                    <td>
+                      {
+                        customer.email
+                      }
+                    </td>
+
+                    <td>
+                      {customer.phone ||
+                        "-"}
+                    </td>
+
+                    <td>
+                      {new Date(
+                        customer.created_at
+                      ).toLocaleDateString()}
+                    </td>
+                  </tr>
+                )
+              )}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 }

@@ -26,9 +26,9 @@ interface EmptyStateProps {
 ========================================================= */
 
 export function EmptyState({
-  icon = "folder-open-outline",
+  icon = "bag-handle-outline",
 
-  iconSize = 80,
+  iconSize = 72,
 
   title,
 
@@ -37,7 +37,7 @@ export function EmptyState({
   header,
 }: EmptyStateProps) {
   return (
-    <View className="flex-1 bg-background">
+    <View className="flex-1 bg-white">
       {/* =================================================
          HEADER
       ================================================= */}
@@ -47,14 +47,14 @@ export function EmptyState({
           className="
             px-6
             pt-16
-            pb-5
+            pb-4
           "
         >
           <Text
             className="
-              text-text-primary
-              text-3xl
-              font-bold
+              text-black
+              text-[34px]
+              font-black
               tracking-tight
             "
           >
@@ -63,7 +63,7 @@ export function EmptyState({
 
           <Text
             className="
-              text-text-secondary
+              text-[#6B7280]
               text-sm
               mt-2
             "
@@ -83,57 +83,108 @@ export function EmptyState({
           items-center
           justify-center
           px-6
+          pb-16
         "
       >
-        {/* ICON */}
+        {/* =================================================
+           CARD
+        ================================================= */}
 
         <View
           className="
-            bg-surface
-            rounded-full
-            w-32
-            h-32
+            bg-[#F3F4F6]
+            rounded-[38px]
+            px-8
+            py-12
             items-center
-            justify-center
-            mb-6
+            w-full
+            max-w-[340px]
           "
+          style={{
+            shadowColor: "#000",
+            shadowOffset: {
+              width: 0,
+              height: 6,
+            },
+            shadowOpacity: 0.05,
+            shadowRadius: 12,
+            elevation: 3,
+          }}
         >
-          <Ionicons
-            name={icon}
-            size={iconSize}
-            color="#666"
-          />
-        </View>
+          {/* =================================================
+             ICON CONTAINER
+          ================================================= */}
 
-        {/* TITLE */}
-
-        <Text
-          className="
-            text-text-primary
-            font-bold
-            text-2xl
-            text-center
-          "
-        >
-          {title}
-        </Text>
-
-        {/* DESCRIPTION */}
-
-        {description && (
-          <Text
+          <View
             className="
-              text-text-secondary
-              text-center
-              mt-3
-              text-base
-              leading-6
-              max-w-[320px]
+              w-28
+              h-28
+              rounded-full
+              bg-[#D9F26A]
+              items-center
+              justify-center
+              mb-7
             "
           >
-            {description}
+            <Ionicons
+              name={icon}
+              size={iconSize}
+              color="#111"
+            />
+          </View>
+
+          {/* =================================================
+             TITLE
+          ================================================= */}
+
+          <Text
+            className="
+              text-black
+              font-black
+              text-[28px]
+              text-center
+              leading-9
+            "
+          >
+            {title}
           </Text>
-        )}
+
+          {/* =================================================
+             DESCRIPTION
+          ================================================= */}
+
+          {description && (
+            <Text
+              className="
+                text-[#6B7280]
+                text-center
+                mt-4
+                text-[15px]
+                leading-7
+              "
+            >
+              {description}
+            </Text>
+          )}
+
+          {/* =================================================
+             DECORATIVE FOOTER
+          ================================================= */}
+
+          <View
+            className="
+              flex-row
+              items-center
+              mt-8
+            "
+          >
+            <View className="w-2 h-2 rounded-full bg-[#D9F26A]" />
+
+            <View className="w-2 h-2 rounded-full bg-[#D9F26A] mx-2 opacity-70" />
+
+            <View className="w-2 h-2 rounded-full bg-[#D9F26A] opacity-40" />
+          </View>
+        </View>
       </View>
     </View>
   );

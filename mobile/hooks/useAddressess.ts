@@ -6,11 +6,10 @@ import {
 
 import { supabase } from "@/lib/supabase";
 
-import { Address } from "@/types";
+import type {  Address } from "@/types";
 
 /* =========================================================
    USE ADDRESSES
-   SUPABASE VERSION
 ========================================================= */
 
 export const useAddresses = () => {
@@ -22,25 +21,27 @@ export const useAddresses = () => {
   ===================================================== */
 
   const {
-    data: addresses,
+    data: addresses = [],
 
     isLoading,
 
     isError,
-  } = useQuery({
+  } = useQuery<Address[]>({
     queryKey: ["addresses"],
 
     queryFn: async () => {
-      const { data, error } =
-        await supabase
-          .from("addresses")
-          .select("*")
-          .order(
-            "created_at",
-            {
-              ascending: false,
-            }
-          );
+      const {
+        data,
+        error,
+      } = await supabase
+        .from("addresses")
+        .select("*")
+        .order(
+          "created_at",
+          {
+            ascending: false,
+          }
+        );
 
       if (error) {
         console.error(
@@ -51,7 +52,9 @@ export const useAddresses = () => {
         throw error;
       }
 
-      return data || [];
+      return (
+        data || []
+      ) as Address[];
     },
   });
 
@@ -67,10 +70,6 @@ export const useAddresses = () => {
           "id"
         >
       ) => {
-        /* =========================================
-           HANDLE DEFAULT ADDRESS
-        ========================================= */
-
         if (
           addressData.isDefault
         ) {
@@ -85,10 +84,6 @@ export const useAddresses = () => {
             );
         }
 
-        /* =========================================
-           INSERT
-        ========================================= */
-
         const {
           data,
           error,
@@ -97,7 +92,8 @@ export const useAddresses = () => {
           .insert([
             addressData,
           ])
-          .select();
+          .select()
+          .single();
 
         if (error) {
           console.error(
@@ -137,10 +133,6 @@ export const useAddresses = () => {
 
         addressData: Partial<Address>;
       }) => {
-        /* =========================================
-           HANDLE DEFAULT ADDRESS
-        ========================================= */
-
         if (
           addressData.isDefault
         ) {
@@ -155,21 +147,20 @@ export const useAddresses = () => {
             );
         }
 
-        /* =========================================
-           UPDATE
-        ========================================= */
-
         const {
           data,
           error,
         } = await supabase
           .from("addresses")
-          .update(addressData)
+          .update(
+            addressData
+          )
           .eq(
             "id",
             addressId
           )
-          .select();
+          .select()
+          .single();
 
         if (error) {
           console.error(
@@ -203,14 +194,15 @@ export const useAddresses = () => {
       mutationFn: async (
         addressId: string
       ) => {
-        const { error } =
-          await supabase
-            .from("addresses")
-            .delete()
-            .eq(
-              "id",
-              addressId
-            );
+        const {
+          error,
+        } = await supabase
+          .from("addresses")
+          .delete()
+          .eq(
+            "id",
+            addressId
+          );
 
         if (error) {
           console.error(
@@ -240,8 +232,7 @@ export const useAddresses = () => {
   ===================================================== */
 
   return {
-    addresses:
-      addresses || [],
+    addresses,
 
     isLoading,
 

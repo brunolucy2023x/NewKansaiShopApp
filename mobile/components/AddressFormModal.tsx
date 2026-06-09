@@ -10,6 +10,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   Alert,
+  TouchableWithoutFeedback,
 } from "react-native";
 
 import SafeScreen from "./SafeScreen";
@@ -89,7 +90,6 @@ const AddressFormModal = ({
     ) {
       Alert.alert(
         "Validation Error",
-
         "Please enter address label"
       );
 
@@ -101,7 +101,6 @@ const AddressFormModal = ({
     ) {
       Alert.alert(
         "Validation Error",
-
         "Please enter full name"
       );
 
@@ -113,7 +112,6 @@ const AddressFormModal = ({
     ) {
       Alert.alert(
         "Validation Error",
-
         "Please enter street address"
       );
 
@@ -125,7 +123,6 @@ const AddressFormModal = ({
     ) {
       Alert.alert(
         "Validation Error",
-
         "Please enter city"
       );
 
@@ -137,7 +134,6 @@ const AddressFormModal = ({
     ) {
       Alert.alert(
         "Validation Error",
-
         "Please enter state"
       );
 
@@ -149,7 +145,6 @@ const AddressFormModal = ({
     ) {
       Alert.alert(
         "Validation Error",
-
         "Please enter phone number"
       );
 
@@ -173,8 +168,9 @@ const AddressFormModal = ({
   return (
     <Modal
       visible={visible}
-      animationType="slide"
+      animationType="fade"
       transparent
+      statusBarTranslucent
       onRequestClose={
         onClose
       }
@@ -188,344 +184,396 @@ const AddressFormModal = ({
         }
         className="flex-1"
       >
-        <SafeScreen>
-          {/* =================================================
-             HEADER
-          ================================================= */}
+        {/* BACKDROP */}
 
+        <TouchableWithoutFeedback
+          onPress={onClose}
+        >
           <View
             className="
-              px-6
-              py-5
-              border-b
-              border-surface
-              flex-row
-              items-center
-              justify-between
+              flex-1
+              justify-end
             "
-          >
-            {/* TITLE */}
-
-            <View className="flex-1">
-              <Text
-                className="
-                  text-text-primary
-                  text-2xl
-                  font-bold
-                "
-              >
-                {isEditing
-                  ? "Edit Address"
-                  : "Add New Address"}
-              </Text>
-
-              <Text
-                className="
-                  text-text-secondary
-                  text-sm
-                  mt-1
-                "
-              >
-                {isEditing
-                  ? "Update your delivery address"
-                  : "Add a new delivery address"}
-              </Text>
-            </View>
-
-            {/* CLOSE BTN */}
-
-            <TouchableOpacity
-              onPress={
-                onClose
-              }
-              className="
-                bg-surface
-                w-11
-                h-11
-                rounded-full
-                items-center
-                justify-center
-              "
-              activeOpacity={
-                0.7
-              }
-            >
-              <Ionicons
-                name="close"
-                size={24}
-                color="#FFFFFF"
-              />
-            </TouchableOpacity>
-          </View>
-
-          {/* =================================================
-             FORM
-          ================================================= */}
-
-          <ScrollView
-            className="flex-1"
-            contentContainerStyle={{
-              paddingBottom: 50,
+            style={{
+              backgroundColor:
+                "rgba(0,0,0,0.45)",
             }}
-            showsVerticalScrollIndicator={
-              false
-            }
           >
-            <View className="p-6">
-              {/* =============================================
-                 LABEL
-              ============================================= */}
+            {/* PREVENT CLOSE */}
 
-              <InputField
-                label="Label"
-                placeholder="e.g. Home, Office"
-                value={
-                  addressForm.label
-                }
-                onChangeText={(
-                  text
-                ) =>
-                  onFormChange({
-                    ...addressForm,
-
-                    label: text,
-                  })
-                }
-              />
-
-              {/* =============================================
-                 FULL NAME
-              ============================================= */}
-
-              <InputField
-                label="Full Name"
-                placeholder="Enter your full name"
-                value={
-                  addressForm.fullName
-                }
-                onChangeText={(
-                  text
-                ) =>
-                  onFormChange({
-                    ...addressForm,
-
-                    fullName:
-                      text,
-                  })
-                }
-              />
-
-              {/* =============================================
-                 STREET ADDRESS
-              ============================================= */}
-
-              <InputField
-                label="Street Address"
-                placeholder="Street address"
-                multiline
-                value={
-                  addressForm.streetAddress
-                }
-                onChangeText={(
-                  text
-                ) =>
-                  onFormChange({
-                    ...addressForm,
-
-                    streetAddress:
-                      text,
-                  })
-                }
-              />
-
-              {/* =============================================
-                 CITY
-              ============================================= */}
-
-              <InputField
-                label="City"
-                placeholder="Enter city"
-                value={
-                  addressForm.city
-                }
-                onChangeText={(
-                  text
-                ) =>
-                  onFormChange({
-                    ...addressForm,
-
-                    city: text,
-                  })
-                }
-              />
-
-              {/* =============================================
-                 STATE
-              ============================================= */}
-
-              <InputField
-                label="State"
-                placeholder="Enter state"
-                value={
-                  addressForm.state
-                }
-                onChangeText={(
-                  text
-                ) =>
-                  onFormChange({
-                    ...addressForm,
-
-                    state: text,
-                  })
-                }
-              />
-
-              {/* =============================================
-                 ZIP CODE
-              ============================================= */}
-
-              <InputField
-                label="ZIP Code"
-                placeholder="e.g. 10001"
-                keyboardType="numeric"
-                value={
-                  addressForm.zipCode
-                }
-                onChangeText={(
-                  text
-                ) =>
-                  onFormChange({
-                    ...addressForm,
-
-                    zipCode:
-                      text,
-                  })
-                }
-              />
-
-              {/* =============================================
-                 PHONE
-              ============================================= */}
-
-              <InputField
-                label="Phone Number"
-                placeholder="+254..."
-                keyboardType="phone-pad"
-                value={
-                  addressForm.phoneNumber
-                }
-                onChangeText={(
-                  text
-                ) =>
-                  onFormChange({
-                    ...addressForm,
-
-                    phoneNumber:
-                      text,
-                  })
-                }
-              />
-
-              {/* =============================================
-                 DEFAULT SWITCH
-              ============================================= */}
-
+            <TouchableWithoutFeedback>
               <View
                 className="
-                  bg-surface
-                  rounded-2xl
-                  p-4
-                  flex-row
-                  items-center
-                  justify-between
-                  mb-6
+                  bg-white
+                  rounded-t-[42px]
+                  overflow-hidden
                 "
+                style={{
+                  height: "92%",
+                }}
               >
-                <View>
-                  <Text
+                <SafeScreen>
+                  {/* =================================================
+                     HANDLE
+                  ================================================= */}
+
+                  <View className="items-center pt-2">
+                    <View
+                      className="
+                        w-16
+                        h-1.5
+                        rounded-full
+                        bg-[#D1D5DB]
+                      "
+                    />
+                  </View>
+
+                  {/* =================================================
+                     HEADER
+                  ================================================= */}
+
+                  <View
                     className="
-                      text-text-primary
-                      font-semibold
+                      px-6
+                      pt-5
+                      pb-4
+                      flex-row
+                      items-center
+                      justify-between
                     "
                   >
-                    Set as default
-                  </Text>
+                    {/* LEFT */}
 
-                  <Text
-                    className="
-                      text-text-secondary
-                      text-xs
-                      mt-1
-                    "
+                    <View className="flex-1 pr-4">
+                      <Text
+                        className="
+                          text-black
+                          text-[30px]
+                          font-black
+                        "
+                      >
+                        {isEditing
+                          ? "Edit Address"
+                          : "New Address"}
+                      </Text>
+
+                      <Text
+                        className="
+                          text-[#6B7280]
+                          text-sm
+                          mt-1
+                        "
+                      >
+                        {isEditing
+                          ? "Update your delivery address"
+                          : "Add a new delivery address"}
+                      </Text>
+                    </View>
+
+                    {/* CLOSE */}
+
+                    <TouchableOpacity
+                      activeOpacity={
+                        0.8
+                      }
+                      onPress={
+                        onClose
+                      }
+                      className="
+                        w-12
+                        h-12
+                        rounded-full
+                        bg-[#F3F4F6]
+                        items-center
+                        justify-center
+                      "
+                    >
+                      <Ionicons
+                        name="close"
+                        size={22}
+                        color="#111"
+                      />
+                    </TouchableOpacity>
+                  </View>
+
+                  {/* =================================================
+                     FORM
+                  ================================================= */}
+
+                  <ScrollView
+                    className="flex-1"
+                    showsVerticalScrollIndicator={
+                      false
+                    }
+                    contentContainerStyle={{
+                      paddingHorizontal: 24,
+                      paddingBottom: 40,
+                    }}
                   >
-                    Use this address by default
-                  </Text>
-                </View>
+                    {/* LABEL */}
 
-                <Switch
-                  value={
-                    addressForm.isDefault
-                  }
-                  onValueChange={(
-                    value
-                  ) =>
-                    onFormChange({
-                      ...addressForm,
+                    <InputField
+                      label="Address Label"
+                      placeholder="Home, Office..."
+                      value={
+                        addressForm.label
+                      }
+                      onChangeText={(
+                        text
+                      ) =>
+                        onFormChange({
+                          ...addressForm,
+                          label: text,
+                        })
+                      }
+                    />
 
-                      isDefault:
-                        value,
-                    })
-                  }
-                  thumbColor="#FFFFFF"
-                />
+                    {/* FULL NAME */}
+
+                    <InputField
+                      label="Full Name"
+                      placeholder="Enter your full name"
+                      value={
+                        addressForm.fullName
+                      }
+                      onChangeText={(
+                        text
+                      ) =>
+                        onFormChange({
+                          ...addressForm,
+                          fullName:
+                            text,
+                        })
+                      }
+                    />
+
+                    {/* STREET */}
+
+                    <InputField
+                      label="Street Address"
+                      placeholder="Street address"
+                      multiline
+                      value={
+                        addressForm.streetAddress
+                      }
+                      onChangeText={(
+                        text
+                      ) =>
+                        onFormChange({
+                          ...addressForm,
+                          streetAddress:
+                            text,
+                        })
+                      }
+                    />
+
+                    {/* CITY */}
+
+                    <InputField
+                      label="City"
+                      placeholder="Enter city"
+                      value={
+                        addressForm.city
+                      }
+                      onChangeText={(
+                        text
+                      ) =>
+                        onFormChange({
+                          ...addressForm,
+                          city: text,
+                        })
+                      }
+                    />
+
+                    {/* STATE */}
+
+                    <InputField
+                      label="State"
+                      placeholder="Enter state"
+                      value={
+                        addressForm.state
+                      }
+                      onChangeText={(
+                        text
+                      ) =>
+                        onFormChange({
+                          ...addressForm,
+                          state: text,
+                        })
+                      }
+                    />
+
+                    {/* ZIP */}
+
+                    <InputField
+                      label="ZIP Code"
+                      placeholder="10001"
+                      keyboardType="numeric"
+                      value={
+                        addressForm.zipCode
+                      }
+                      onChangeText={(
+                        text
+                      ) =>
+                        onFormChange({
+                          ...addressForm,
+                          zipCode:
+                            text,
+                        })
+                      }
+                    />
+
+                    {/* PHONE */}
+
+                    <InputField
+                      label="Phone Number"
+                      placeholder="+254..."
+                      keyboardType="phone-pad"
+                      value={
+                        addressForm.phoneNumber
+                      }
+                      onChangeText={(
+                        text
+                      ) =>
+                        onFormChange({
+                          ...addressForm,
+                          phoneNumber:
+                            text,
+                        })
+                      }
+                    />
+
+                    {/* =================================================
+                       DEFAULT SWITCH
+                    ================================================= */}
+
+                    <View
+                      className="
+                        bg-[#F3F4F6]
+                        rounded-[28px]
+                        p-5
+                        flex-row
+                        items-center
+                        justify-between
+                        mt-2
+                        mb-8
+                      "
+                    >
+                      <View className="flex-1 pr-4">
+                        <Text
+                          className="
+                            text-black
+                            font-black
+                            text-[16px]
+                          "
+                        >
+                          Set as default
+                        </Text>
+
+                        <Text
+                          className="
+                            text-[#6B7280]
+                            text-sm
+                            mt-1
+                            leading-6
+                          "
+                        >
+                          Use this address for future
+                          orders and deliveries.
+                        </Text>
+                      </View>
+
+                      <Switch
+                        value={
+                          addressForm.isDefault
+                        }
+                        onValueChange={(
+                          value
+                        ) =>
+                          onFormChange({
+                            ...addressForm,
+                            isDefault:
+                              value,
+                          })
+                        }
+                        trackColor={{
+                          false:
+                            "#D1D5DB",
+                          true:
+                            "#D9F26A",
+                        }}
+                        thumbColor="#FFFFFF"
+                      />
+                    </View>
+
+                    {/* =================================================
+                       SAVE BUTTON
+                    ================================================= */}
+
+                    <TouchableOpacity
+                      activeOpacity={
+                        0.9
+                      }
+                      onPress={
+                        handleSave
+                      }
+                      disabled={
+                        isAddingAddress ||
+                        isUpdatingAddress
+                      }
+                      className="
+                        bg-[#D9F26A]
+                        rounded-[28px]
+                        py-5
+                        items-center
+                        justify-center
+                        mb-8
+                      "
+                    >
+                      {isAddingAddress ||
+                      isUpdatingAddress ? (
+                        <ActivityIndicator
+                          size="small"
+                          color="#111"
+                        />
+                      ) : (
+                        <View
+                          className="
+                            flex-row
+                            items-center
+                          "
+                        >
+                          <Ionicons
+                            name={
+                              isEditing
+                                ? "checkmark"
+                                : "add"
+                            }
+                            size={20}
+                            color="#111"
+                          />
+
+                          <Text
+                            className="
+                              text-black
+                              font-black
+                              text-[17px]
+                              ml-3
+                            "
+                          >
+                            {isEditing
+                              ? "Save Changes"
+                              : "Add Address"}
+                          </Text>
+                        </View>
+                      )}
+                    </TouchableOpacity>
+                  </ScrollView>
+                </SafeScreen>
               </View>
-
-              {/* =============================================
-                 SAVE BTN
-              ============================================= */}
-
-              <TouchableOpacity
-                className="
-                  bg-primary
-                  rounded-2xl
-                  py-5
-                  items-center
-                  justify-center
-                "
-                activeOpacity={
-                  0.8
-                }
-                onPress={
-                  handleSave
-                }
-                disabled={
-                  isAddingAddress ||
-                  isUpdatingAddress
-                }
-              >
-                {isAddingAddress ||
-                isUpdatingAddress ? (
-                  <ActivityIndicator
-                    size="small"
-                    color="#121212"
-                  />
-                ) : (
-                  <Text
-                    className="
-                      text-background
-                      font-bold
-                      text-lg
-                    "
-                  >
-                    {isEditing
-                      ? "Save Changes"
-                      : "Add Address"}
-                  </Text>
-                )}
-              </TouchableOpacity>
-            </View>
-          </ScrollView>
-        </SafeScreen>
+            </TouchableWithoutFeedback>
+          </View>
+        </TouchableWithoutFeedback>
       </KeyboardAvoidingView>
     </Modal>
   );
@@ -568,29 +616,34 @@ function InputField({
 }: InputFieldProps) {
   return (
     <View className="mb-5">
+      {/* LABEL */}
+
       <Text
         className="
-          text-text-primary
-          font-semibold
-          mb-2
+          text-black
+          font-bold
+          text-[15px]
+          mb-3
         "
       >
         {label}
       </Text>
 
+      {/* INPUT */}
+
       <TextInput
         className="
-          bg-surface
-          text-text-primary
-          px-4
-          py-4
-          rounded-2xl
-          text-base
+          bg-[#F3F4F6]
+          text-black
+          px-5
+          py-5
+          rounded-[24px]
+          text-[15px]
         "
         placeholder={
           placeholder
         }
-        placeholderTextColor="#666"
+        placeholderTextColor="#9CA3AF"
         value={value}
         onChangeText={
           onChangeText
@@ -602,7 +655,7 @@ function InputField({
         style={{
           minHeight:
             multiline
-              ? 110
+              ? 120
               : undefined,
 
           textAlignVertical:

@@ -1,104 +1,80 @@
 // src/pages/ProductsPage.jsx
 
-import { useState } from "react";
-
+import { useEffect, useState } from "react";
 import {
   PlusIcon,
   PencilIcon,
   Trash2Icon,
-  XIcon,
-  UploadIcon,
 } from "lucide-react";
-
 import {
   useQuery,
   useMutation,
   useQueryClient,
 } from "@tanstack/react-query";
-
 import { supabase } from "../lib/supabase";
+
+/* =========================================================
+   EMPTY FORM TEMPLATE
+========================================================= */
+const emptyForm = {
+  name: "",
+  description: "",
+  price: "",
+  stock: "",
+  category: "",
+  imageFile: null,
+};
 
 function ProductsPage() {
   const queryClient = useQueryClient();
 
-  /* =========================================================
-     STATE
-  ========================================================= */
-
-  const [showModal, setShowModal] =
-    useState(false);
-
-  const [editingProduct, setEditingProduct] =
-    useState(null);
-
-  const [uploading, setUploading] =
-    useState(false);
-
-  const [formData, setFormData] = useState({
-    name: "",
-    description: "",
-    price: "",
-    stock: "",
-    category: "",
-    imageFile: null,
-  });
+  const [selected, setSelected] = useState(null);
+  const [form, setForm] = useState(emptyForm);
+  const [uploading, setUploading] = useState(false);
 
   /* =========================================================
      FETCH PRODUCTS
   ========================================================= */
-
-  const {
-    data: products = [],
-    isLoading,
-  } = useQuery({
+  const { data: products = [], isLoading } = useQuery({
     queryKey: ["products"],
-
     queryFn: async () => {
-      const { data, error } =
-        await supabase
-          .from("products")
-          .select("*")
-          .order("created_at", {
-            ascending: false,
-          });
+      const { data, error } = await supabase
+        .from("products")
+        .select("*")
+        .order("created_at", { ascending: false });
 
       if (error) throw error;
-
       return data;
     },
   });
 
   /* =========================================================
-     CREATE PRODUCT
-  ========================================================= */
+     RESET FORM WHEN SWITCHING MODE
+========================================================= */
+  useEffect(() => {
+    if (!selected) setForm(emptyForm);
+  }, [selected]);
 
-  const createMutation = useMutation({
-    mutationFn: async (productData) => {
+  /* =========================================================
+     CREATE / UPDATE
+========================================================= */
+  const saveProduct = useMutation({
+    mutationFn: async () => {
       setUploading(true);
 
-      let imageUrl = "";
+      let imageUrl = selected?.images?.[0] || "";
 
-      /* =========================================
-         IMAGE UPLOAD
-      ========================================= */
+      // upload image if new
+      if (form.imageFile) {
+        const file = form.imageFile;
+        const ext = file.name.split(".").pop();
+        const fileName = `${Date.now()}.${ext}`;
 
-      if (productData.imageFile) {
-        const file =
-          productData.imageFile;
+        const { error: uploadError } = await supabase.storage
+          .from("products")
+          .upload(fileName, file);
 
-        const fileExt =
-          file.name.split(".").pop();
-
-        const fileName = `${Date.now()}.${fileExt}`;
-
-        const { error: uploadError } =
-          await supabase.storage
-            .from("products")
-            .upload(fileName, file);
-
-        if (uploadError) {
-          throw uploadError;
-        }
+        if (uploadError) throw uploadError;
 
         const { data } = supabase.storage
           .from("products")
@@ -107,163 +83,49 @@ function ProductsPage() {
         imageUrl = data.publicUrl;
       }
 
-      /* =========================================
-         INSERT PRODUCT
-      ========================================= */
+      const payload = {
+        name: form.name,
+        description: form.description,
+        price: Number(form.price),
+        stock: Number(form.stock),
+        category: form.category,
+        images: imageUrl ? [imageUrl] : [],
+      };
 
-      const { error } = await supabase
-        .from("products")
-        .insert([
-          {
-            name: productData.name,
-
-            description:
-              productData.description,
-
-            price: Number(
-              productData.price
-            ),
-
-            stock: Number(
-              productData.stock
-            ),
-
-            category:
-              productData.category,
-
-            images: imageUrl
-              ? [imageUrl]
-              : [],
-          },
-        ]);
-
-      setUploading(false);
-
-      if (error) throw error;
-    },
-
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ["products"],
-      });
-
-      closeModal();
-    },
-
-    onError: (error) => {
-      setUploading(false);
-
-      console.error(error);
-
-      alert(
-        error.message ||
-          "Failed to create product"
-      );
-    },
-  });
-
-  /* =========================================================
-     UPDATE PRODUCT
-  ========================================================= */
-
-  const updateMutation = useMutation({
-    mutationFn: async ({
-      id,
-      productData,
-    }) => {
-      setUploading(true);
-
-      let imageUrl =
-        editingProduct?.images?.[0] || "";
-
-      /* =========================================
-         NEW IMAGE UPLOAD
-      ========================================= */
-
-      if (productData.imageFile) {
-        const file =
-          productData.imageFile;
-
-        const fileExt =
-          file.name.split(".").pop();
-
-        const fileName = `${Date.now()}.${fileExt}`;
-
-        const { error: uploadError } =
-          await supabase.storage
-            .from("products")
-            .upload(fileName, file);
-
-        if (uploadError) {
-          throw uploadError;
-        }
-
-        const { data } = supabase.storage
+      if (selected) {
+        const { error } = await supabase
           .from("products")
-          .getPublicUrl(fileName);
+          .update(payload)
+          .eq("id", selected.id);
 
-        imageUrl = data.publicUrl;
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from("products")
+          .insert([payload]);
+
+        if (error) throw error;
       }
 
-      /* =========================================
-         UPDATE PRODUCT
-      ========================================= */
-
-      const { error } = await supabase
-        .from("products")
-        .update({
-          name: productData.name,
-
-          description:
-            productData.description,
-
-          price: Number(
-            productData.price
-          ),
-
-          stock: Number(
-            productData.stock
-          ),
-
-          category:
-            productData.category,
-
-          images: imageUrl
-            ? [imageUrl]
-            : [],
-        })
-        .eq("id", id);
-
       setUploading(false);
-
-      if (error) throw error;
     },
 
     onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ["products"],
-      });
-
-      closeModal();
+      queryClient.invalidateQueries(["products"]);
+      setSelected(null);
+      setForm(emptyForm);
     },
 
-    onError: (error) => {
+    onError: (err) => {
       setUploading(false);
-
-      console.error(error);
-
-      alert(
-        error.message ||
-          "Failed to update product"
-      );
+      alert(err.message || "Error saving product");
     },
   });
 
   /* =========================================================
-     DELETE PRODUCT
-  ========================================================= */
-
-  const deleteMutation = useMutation({
+     DELETE
+========================================================= */
+  const deleteProduct = useMutation({
     mutationFn: async (id) => {
       const { error } = await supabase
         .from("products")
@@ -272,384 +134,191 @@ function ProductsPage() {
 
       if (error) throw error;
     },
-
     onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ["products"],
-      });
+      queryClient.invalidateQueries(["products"]);
     },
   });
 
   /* =========================================================
-     HELPERS
-  ========================================================= */
-
-  const closeModal = () => {
-    setShowModal(false);
-
-    setEditingProduct(null);
-
-    setFormData({
-      name: "",
-      description: "",
-      price: "",
-      stock: "",
-      category: "",
-      imageFile: null,
-    });
-  };
-
-  const handleEdit = (product) => {
-    setEditingProduct(product);
-
-    setFormData({
-      name: product.name || "",
-
-      description:
-        product.description || "",
-
-      price: product.price || "",
-
-      stock: product.stock || "",
-
-      category:
-        product.category || "",
-
-      imageFile: null,
-    });
-
-    setShowModal(true);
-  };
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-
-    if (editingProduct) {
-      updateMutation.mutate({
-        id: editingProduct.id,
-
-        productData: formData,
-      });
-    } else {
-      createMutation.mutate(formData);
-    }
-  };
-
+     UI
+========================================================= */
   return (
-    <div className="space-y-6">
-      {/* =========================================================
-          HEADER
-      ========================================================= */}
+    <div className="h-[calc(100vh-80px)] flex gap-6 overflow-hidden">
 
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">
-            Products
-          </h1>
+      {/* =====================================================
+         LEFT: PRODUCT LIST
+      ===================================================== */}
+      <div className="w-2/3 overflow-y-auto space-y-4 pr-2">
 
-          <p className="text-base-content/70">
-            Manage products with
-            Supabase
-          </p>
+        {/* HEADER */}
+        <div className="flex justify-between items-center">
+          <h1 className="text-2xl font-bold">Products</h1>
+
+          <button
+            onClick={() => {
+              setSelected(null);
+              setForm(emptyForm);
+            }}
+            className="btn btn-primary gap-2"
+          >
+            <PlusIcon className="w-4 h-4" />
+            New Product
+          </button>
         </div>
 
-        <button
-          className="btn btn-primary gap-2"
-          onClick={() =>
-            setShowModal(true)
-          }
-        >
-          <PlusIcon className="w-5 h-5" />
-
-          Add Product
-        </button>
-      </div>
-
-      {/* =========================================================
-          PRODUCTS
-      ========================================================= */}
-
-      {isLoading ? (
-        <div className="flex justify-center py-12">
-          <span className="loading loading-spinner loading-lg" />
-        </div>
-      ) : products.length === 0 ? (
-        <div className="text-center py-20 opacity-70">
-          No products yet
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 gap-4">
-          {products.map((product) => (
-            <div
-              key={product.id}
-              className="card bg-base-100 shadow-xl"
-            >
-              <div className="card-body">
-                <div className="flex items-center gap-6">
-                  {/* IMAGE */}
-
+        {/* LIST */}
+        {isLoading ? (
+          <div className="text-center py-10">Loading...</div>
+        ) : (
+          <div className="space-y-3">
+            {products.map((p) => (
+              <div
+                key={p.id}
+                className={`p-4 rounded-xl border flex items-center justify-between cursor-pointer transition
+                ${
+                  selected?.id === p.id
+                    ? "border-blue-500 bg-blue-500/10"
+                    : "border-white/10 hover:bg-white/5"
+                }`}
+                onClick={() => {
+                  setSelected(p);
+                  setForm({
+                    name: p.name || "",
+                    description: p.description || "",
+                    price: p.price || "",
+                    stock: p.stock || "",
+                    category: p.category || "",
+                    imageFile: null,
+                  });
+                }}
+              >
+                <div className="flex items-center gap-4">
                   <img
-                    src={
-                      product.images?.[0] ||
-                      "/placeholder.png"
-                    }
-                    alt={product.name}
-                    className="w-20 h-20 rounded-xl object-cover border border-base-300"
+                    src={p.images?.[0] || "/placeholder.png"}
+                    className="w-12 h-12 rounded-lg object-cover"
                   />
 
-                  {/* CONTENT */}
-
-                  <div className="flex-1">
-                    <h2 className="card-title">
-                      {product.name}
-                    </h2>
-
-                    <p className="text-sm opacity-70">
-                      {product.category}
+                  <div>
+                    <p className="font-semibold">{p.name}</p>
+                    <p className="text-xs opacity-60">
+                      {p.category}
                     </p>
-
-                    <div className="mt-2 flex items-center gap-4">
-                      <span className="font-bold text-lg">
-                        $
-                        {Number(
-                          product.price
-                        ).toFixed(2)}
-                      </span>
-
-                      <span className="badge badge-outline">
-                        Stock:{" "}
-                        {product.stock}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* ACTIONS */}
-
-                  <div className="flex gap-2">
-                    <button
-                      className="btn btn-square btn-ghost"
-                      onClick={() =>
-                        handleEdit(product)
-                      }
-                    >
-                      <PencilIcon className="w-5 h-5" />
-                    </button>
-
-                    <button
-                      className="btn btn-square btn-ghost text-error"
-                      onClick={() =>
-                        deleteMutation.mutate(
-                          product.id
-                        )
-                      }
-                    >
-                      <Trash2Icon className="w-5 h-5" />
-                    </button>
                   </div>
                 </div>
+
+                <div className="flex gap-2">
+                  <button
+                    className="btn btn-sm btn-ghost"
+                  >
+                    <PencilIcon className="w-4 h-4" />
+                  </button>
+
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      deleteProduct.mutate(p.id);
+                    }}
+                    className="btn btn-sm btn-ghost text-red-400"
+                  >
+                    <Trash2Icon className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* =========================================================
-          MODAL
-      ========================================================= */}
-
-      {showModal && (
-        <div className="modal modal-open">
-          <div className="modal-box max-w-2xl">
-            {/* HEADER */}
-
-            <div className="flex items-center justify-between">
-              <h3 className="font-bold text-2xl">
-                {editingProduct
-                  ? "Edit Product"
-                  : "Add Product"}
-              </h3>
-
-              <button
-                className="btn btn-sm btn-circle"
-                onClick={closeModal}
-              >
-                <XIcon className="w-4 h-4" />
-              </button>
-            </div>
-
-            {/* FORM */}
-
-            <form
-              onSubmit={handleSubmit}
-              className="space-y-4 mt-6"
-            >
-              {/* NAME */}
-
-              <input
-                type="text"
-                placeholder="Product Name"
-                className="input input-bordered w-full"
-                value={formData.name}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    name:
-                      e.target.value,
-                  })
-                }
-                required
-              />
-
-              {/* DESCRIPTION */}
-
-              <textarea
-                placeholder="Description"
-                className="textarea textarea-bordered w-full h-28"
-                value={
-                  formData.description
-                }
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    description:
-                      e.target.value,
-                  })
-                }
-                required
-              />
-
-              {/* PRICE + STOCK */}
-
-              <div className="grid grid-cols-2 gap-4">
-                <input
-                  type="number"
-                  placeholder="Price"
-                  className="input input-bordered w-full"
-                  value={formData.price}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      price:
-                        e.target.value,
-                    })
-                  }
-                  required
-                />
-
-                <input
-                  type="number"
-                  placeholder="Stock"
-                  className="input input-bordered w-full"
-                  value={formData.stock}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      stock:
-                        e.target.value,
-                    })
-                  }
-                  required
-                />
-              </div>
-
-              {/* CATEGORY */}
-
-              <input
-                type="text"
-                placeholder="Category"
-                className="input input-bordered w-full"
-                value={formData.category}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    category:
-                      e.target.value,
-                  })
-                }
-                required
-              />
-
-              {/* IMAGE UPLOAD */}
-
-              <div className="space-y-2">
-                <label className="font-medium text-sm">
-                  Product Image
-                </label>
-
-                <label className="flex flex-col items-center justify-center border-2 border-dashed border-base-300 rounded-2xl p-8 cursor-pointer hover:border-primary transition-all">
-                  <UploadIcon className="w-10 h-10 mb-3 opacity-70" />
-
-                  <span className="font-medium">
-                    Click to upload image
-                  </span>
-
-                  <span className="text-sm opacity-60 mt-1">
-                    PNG, JPG, WEBP
-                  </span>
-
-                  <input
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        imageFile:
-                          e.target
-                            .files[0],
-                      })
-                    }
-                  />
-                </label>
-
-                {/* PREVIEW */}
-
-                {formData.imageFile && (
-                  <img
-                    src={URL.createObjectURL(
-                      formData.imageFile
-                    )}
-                    alt="Preview"
-                    className="w-32 h-32 rounded-xl object-cover border border-base-300 mt-4"
-                  />
-                )}
-
-                {!formData.imageFile &&
-                  editingProduct
-                    ?.images?.[0] && (
-                    <img
-                      src={
-                        editingProduct
-                          .images[0]
-                      }
-                      alt="Current"
-                      className="w-32 h-32 rounded-xl object-cover border border-base-300 mt-4"
-                    />
-                  )}
-              </div>
-
-              {/* BUTTON */}
-
-              <button
-                type="submit"
-                className="btn btn-primary w-full"
-                disabled={uploading}
-              >
-                {uploading ? (
-                  <>
-                    <span className="loading loading-spinner loading-sm" />
-                    Uploading...
-                  </>
-                ) : editingProduct ? (
-                  "Update Product"
-                ) : (
-                  "Create Product"
-                )}
-              </button>
-            </form>
+            ))}
           </div>
+        )}
+      </div>
+
+      {/* =====================================================
+         RIGHT: EDITOR PANEL
+      ===================================================== */}
+      <div className="w-1/3 border-l border-white/10 pl-4 overflow-y-auto">
+
+        <h2 className="text-xl font-bold mb-4">
+          {selected ? "Edit Product" : "Create Product"}
+        </h2>
+
+        <div className="space-y-3">
+
+          <input
+            className="input input-bordered w-full"
+            placeholder="Name"
+            value={form.name}
+            onChange={(e) =>
+              setForm({ ...form, name: e.target.value })
+            }
+          />
+
+          <textarea
+            className="textarea textarea-bordered w-full"
+            placeholder="Description"
+            value={form.description}
+            onChange={(e) =>
+              setForm({ ...form, description: e.target.value })
+            }
+          />
+
+          <input
+            className="input input-bordered w-full"
+            placeholder="Price"
+            type="number"
+            value={form.price}
+            onChange={(e) =>
+              setForm({ ...form, price: e.target.value })
+            }
+          />
+
+          <input
+            className="input input-bordered w-full"
+            placeholder="Stock"
+            type="number"
+            value={form.stock}
+            onChange={(e) =>
+              setForm({ ...form, stock: e.target.value })
+            }
+          />
+
+          <input
+            className="input input-bordered w-full"
+            placeholder="Category"
+            value={form.category}
+            onChange={(e) =>
+              setForm({ ...form, category: e.target.value })
+            }
+          />
+
+          {/* IMAGE */}
+          <input
+            type="file"
+            className="file-input file-input-bordered w-full"
+            onChange={(e) =>
+              setForm({
+                ...form,
+                imageFile: e.target.files[0],
+              })
+            }
+          />
+
+          {selected?.images?.[0] && !form.imageFile && (
+            <img
+              src={selected.images[0]}
+              className="w-full h-40 object-cover rounded-xl"
+            />
+          )}
+
+          <button
+            onClick={() => saveProduct.mutate()}
+            disabled={uploading}
+            className="btn btn-primary w-full"
+          >
+            {uploading
+              ? "Saving..."
+              : selected
+              ? "Update Product"
+              : "Create Product"}
+          </button>
         </div>
-      )}
+      </div>
     </div>
   );
 }

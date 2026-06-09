@@ -16,7 +16,12 @@ import {
   Text,
   TouchableOpacity,
   View,
+  StatusBar,
 } from "react-native";
+
+/* =========================================================
+   TYPES
+========================================================= */
 
 type SecurityOption = {
   id: string;
@@ -27,15 +32,21 @@ type SecurityOption = {
 
   description: string;
 
-  type: "navigation" | "toggle";
+  type:
+    | "navigation"
+    | "toggle";
 
   value?: boolean;
 };
 
+/* =========================================================
+   COMPONENT
+========================================================= */
+
 function PrivacyAndSecurityScreen() {
-  /* =========================================================
+  /* =====================================================
      STATE
-  ========================================================= */
+  ===================================================== */
 
   const [loading, setLoading] =
     useState(true);
@@ -43,209 +54,258 @@ function PrivacyAndSecurityScreen() {
   const [saving, setSaving] =
     useState(false);
 
-  const [twoFactorEnabled, setTwoFactorEnabled] =
-    useState(false);
+  const [
+    twoFactorEnabled,
+    setTwoFactorEnabled,
+  ] = useState(false);
 
-  const [biometricEnabled, setBiometricEnabled] =
-    useState(true);
+  const [
+    biometricEnabled,
+    setBiometricEnabled,
+  ] = useState(true);
 
-  const [pushNotifications, setPushNotifications] =
-    useState(true);
+  const [
+    pushNotifications,
+    setPushNotifications,
+  ] = useState(true);
 
-  const [emailNotifications, setEmailNotifications] =
-    useState(true);
+  const [
+    emailNotifications,
+    setEmailNotifications,
+  ] = useState(true);
 
-  const [marketingEmails, setMarketingEmails] =
-    useState(false);
+  const [
+    marketingEmails,
+    setMarketingEmails,
+  ] = useState(false);
 
   const [shareData, setShareData] =
     useState(false);
 
-  /* =========================================================
-     LOAD SETTINGS FROM SUPABASE
-  ========================================================= */
+  /* =====================================================
+     LOAD SETTINGS
+  ===================================================== */
 
   useEffect(() => {
     loadSettings();
   }, []);
 
-  const loadSettings = async () => {
-    try {
-      setLoading(true);
+  const loadSettings =
+    async () => {
+      try {
+        setLoading(true);
 
-      const { data, error } =
-        await supabase
-          .from("user_settings")
+        const {
+          data,
+          error,
+        } = await supabase
+          .from(
+            "user_settings"
+          )
           .select("*")
           .limit(1)
           .single();
 
-      if (error && error.code !== "PGRST116") {
-        throw error;
+        if (
+          error &&
+          error.code !==
+            "PGRST116"
+        ) {
+          throw error;
+        }
+
+        if (data) {
+          setTwoFactorEnabled(
+            data.twoFactorEnabled
+          );
+
+          setBiometricEnabled(
+            data.biometricEnabled
+          );
+
+          setPushNotifications(
+            data.pushNotifications
+          );
+
+          setEmailNotifications(
+            data.emailNotifications
+          );
+
+          setMarketingEmails(
+            data.marketingEmails
+          );
+
+          setShareData(
+            data.shareData
+          );
+        }
+      } catch (error) {
+        console.error(
+          error
+        );
+
+        Alert.alert(
+          "Error",
+
+          "Failed to load settings"
+        );
+      } finally {
+        setLoading(false);
       }
+    };
 
-      if (data) {
-        setTwoFactorEnabled(
-          data.twoFactorEnabled
-        );
-
-        setBiometricEnabled(
-          data.biometricEnabled
-        );
-
-        setPushNotifications(
-          data.pushNotifications
-        );
-
-        setEmailNotifications(
-          data.emailNotifications
-        );
-
-        setMarketingEmails(
-          data.marketingEmails
-        );
-
-        setShareData(
-          data.shareData
-        );
-      }
-    } catch (error) {
-      console.error(error);
-
-      Alert.alert(
-        "Error",
-        "Failed to load settings"
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  /* =========================================================
+  /* =====================================================
      SAVE SETTINGS
-  ========================================================= */
+  ===================================================== */
 
-  const saveSettings = async (
-    updatedSettings: any
-  ) => {
-    try {
-      setSaving(true);
+  const saveSettings =
+    async (
+      updatedSettings: any
+    ) => {
+      try {
+        setSaving(true);
 
-      const { error } =
-        await supabase
-          .from("user_settings")
-          .upsert([
-            {
-              id: 1,
+        const { error } =
+          await supabase
+            .from(
+              "user_settings"
+            )
+            .upsert([
+              {
+                id: 1,
 
-              twoFactorEnabled,
+                twoFactorEnabled,
 
-              biometricEnabled,
+                biometricEnabled,
 
-              pushNotifications,
+                pushNotifications,
 
-              emailNotifications,
+                emailNotifications,
 
-              marketingEmails,
+                marketingEmails,
 
-              shareData,
+                shareData,
 
-              ...updatedSettings,
-            },
-          ]);
+                ...updatedSettings,
+              },
+            ]);
 
-      if (error) {
-        throw error;
+        if (error) {
+          throw error;
+        }
+      } catch (error) {
+        console.error(
+          error
+        );
+
+        Alert.alert(
+          "Error",
+
+          "Failed to save settings"
+        );
+      } finally {
+        setSaving(false);
       }
-    } catch (error) {
-      console.error(error);
+    };
 
-      Alert.alert(
-        "Error",
-        "Failed to save settings"
-      );
-    } finally {
-      setSaving(false);
-    }
-  };
+  /* =====================================================
+     TOGGLE
+  ===================================================== */
 
-  /* =========================================================
-     TOGGLE HANDLER
-  ========================================================= */
+  const handleToggle =
+    async (
+      id: string,
+      value: boolean
+    ) => {
+      switch (id) {
+        case "two-factor":
+          setTwoFactorEnabled(
+            value
+          );
 
-  const handleToggle = async (
-    id: string,
-    value: boolean
-  ) => {
-    switch (id) {
-      case "two-factor":
-        setTwoFactorEnabled(value);
+          await saveSettings({
+            twoFactorEnabled:
+              value,
+          });
 
-        await saveSettings({
-          twoFactorEnabled: value,
-        });
+          break;
 
-        break;
+        case "biometric":
+          setBiometricEnabled(
+            value
+          );
 
-      case "biometric":
-        setBiometricEnabled(value);
+          await saveSettings({
+            biometricEnabled:
+              value,
+          });
 
-        await saveSettings({
-          biometricEnabled: value,
-        });
+          break;
 
-        break;
+        case "push":
+          setPushNotifications(
+            value
+          );
 
-      case "push":
-        setPushNotifications(value);
+          await saveSettings({
+            pushNotifications:
+              value,
+          });
 
-        await saveSettings({
-          pushNotifications: value,
-        });
+          break;
 
-        break;
+        case "email":
+          setEmailNotifications(
+            value
+          );
 
-      case "email":
-        setEmailNotifications(value);
+          await saveSettings({
+            emailNotifications:
+              value,
+          });
 
-        await saveSettings({
-          emailNotifications: value,
-        });
+          break;
 
-        break;
+        case "marketing":
+          setMarketingEmails(
+            value
+          );
 
-      case "marketing":
-        setMarketingEmails(value);
+          await saveSettings({
+            marketingEmails:
+              value,
+          });
 
-        await saveSettings({
-          marketingEmails: value,
-        });
+          break;
 
-        break;
+        case "data":
+          setShareData(
+            value
+          );
 
-      case "data":
-        setShareData(value);
+          await saveSettings({
+            shareData:
+              value,
+          });
 
-        await saveSettings({
-          shareData: value,
-        });
+          break;
+      }
+    };
 
-        break;
-    }
-  };
-
-  /* =========================================================
-     SETTINGS ARRAYS
-  ========================================================= */
+  /* =====================================================
+     SETTINGS
+  ===================================================== */
 
   const securitySettings: SecurityOption[] =
     [
       {
         id: "password",
 
-        icon: "lock-closed-outline",
+        icon:
+          "lock-closed-outline",
 
-        title: "Change Password",
+        title:
+          "Change Password",
 
         description:
           "Update your account password",
@@ -267,22 +327,26 @@ function PrivacyAndSecurityScreen() {
 
         type: "toggle",
 
-        value: twoFactorEnabled,
+        value:
+          twoFactorEnabled,
       },
 
       {
         id: "biometric",
 
-        icon: "finger-print-outline",
+        icon:
+          "finger-print-outline",
 
-        title: "Biometric Login",
+        title:
+          "Biometric Login",
 
         description:
           "Use Face ID or Touch ID",
 
         type: "toggle",
 
-        value: biometricEnabled,
+        value:
+          biometricEnabled,
       },
     ];
 
@@ -291,61 +355,73 @@ function PrivacyAndSecurityScreen() {
       {
         id: "push",
 
-        icon: "notifications-outline",
+        icon:
+          "notifications-outline",
 
-        title: "Push Notifications",
+        title:
+          "Push Notifications",
 
         description:
           "Receive push notifications",
 
         type: "toggle",
 
-        value: pushNotifications,
+        value:
+          pushNotifications,
       },
 
       {
         id: "email",
 
-        icon: "mail-outline",
+        icon:
+          "mail-outline",
 
-        title: "Email Notifications",
+        title:
+          "Email Notifications",
 
         description:
           "Receive order updates via email",
 
         type: "toggle",
 
-        value: emailNotifications,
+        value:
+          emailNotifications,
       },
 
       {
         id: "marketing",
 
-        icon: "megaphone-outline",
+        icon:
+          "megaphone-outline",
 
-        title: "Marketing Emails",
+        title:
+          "Marketing Emails",
 
         description:
           "Receive promotional emails",
 
         type: "toggle",
 
-        value: marketingEmails,
+        value:
+          marketingEmails,
       },
 
       {
         id: "data",
 
-        icon: "analytics-outline",
+        icon:
+          "analytics-outline",
 
-        title: "Share Usage Data",
+        title:
+          "Share Usage Data",
 
         description:
           "Help us improve the app",
 
         type: "toggle",
 
-        value: shareData,
+        value:
+          shareData,
       },
     ];
 
@@ -353,9 +429,11 @@ function PrivacyAndSecurityScreen() {
     {
       id: "activity",
 
-      icon: "time-outline",
+      icon:
+        "time-outline",
 
-      title: "Account Activity",
+      title:
+        "Account Activity",
 
       description:
         "View recent login activity",
@@ -367,7 +445,8 @@ function PrivacyAndSecurityScreen() {
       icon:
         "phone-portrait-outline",
 
-      title: "Connected Devices",
+      title:
+        "Connected Devices",
 
       description:
         "Manage devices with access",
@@ -376,337 +455,688 @@ function PrivacyAndSecurityScreen() {
     {
       id: "data-download",
 
-      icon: "download-outline",
+      icon:
+        "download-outline",
 
-      title: "Download Your Data",
+      title:
+        "Download Your Data",
 
       description:
         "Get a copy of your data",
     },
   ];
 
-  /* =========================================================
-     LOADING UI
-  ========================================================= */
+  /* =====================================================
+     LOADING
+  ===================================================== */
 
   if (loading) {
     return (
-      <SafeScreen>
-        <View className="flex-1 items-center justify-center">
-          <ActivityIndicator
-            size="large"
-            color="#1DB954"
-          />
-
-          <Text className="text-text-secondary mt-4">
-            Loading settings...
-          </Text>
-        </View>
-      </SafeScreen>
+      <LoadingUI />
     );
   }
 
+  /* =====================================================
+     MAIN
+  ===================================================== */
+
   return (
-    <SafeScreen>
-      {/* =====================================================
-          HEADER
-      ===================================================== */}
+    <>
+      <StatusBar
+        barStyle="dark-content"
+        backgroundColor="#FFFFFF"
+      />
 
-      <View className="px-6 pb-5 border-b border-surface flex-row items-center justify-between">
-        <View className="flex-row items-center">
-          <TouchableOpacity
-            onPress={() => router.back()}
-            className="mr-4"
-          >
-            <Ionicons
-              name="arrow-back"
-              size={28}
-              color="#fff"
-            />
-          </TouchableOpacity>
+      <SafeScreen>
+        <View className="flex-1 bg-white">
+          {/* =================================================
+             HEADER
+          ================================================= */}
 
-          <Text className="text-text-primary text-2xl font-bold">
-            Privacy & Security
-          </Text>
-        </View>
+          <View className="px-6 pt-4 pb-6">
+            <View
+              className="
+                flex-row
+                items-center
+                justify-between
+              "
+            >
+              {/* LEFT */}
 
-        {saving && (
-          <ActivityIndicator
-            size="small"
-            color="#1DB954"
-          />
-        )}
-      </View>
+              <View className="flex-row items-center flex-1">
+                {/* BACK */}
 
-      {/* =====================================================
-          CONTENT
-      ===================================================== */}
-
-      <ScrollView
-        className="flex-1"
-        showsVerticalScrollIndicator={
-          false
-        }
-        contentContainerStyle={{
-          paddingBottom: 80,
-        }}
-      >
-        {/* =====================================================
-            SECURITY SECTION
-        ===================================================== */}
-
-        <View className="px-6 pt-6">
-          <Text className="text-text-primary text-lg font-bold mb-4">
-            Security
-          </Text>
-
-          {securitySettings.map(
-            (setting) => (
-              <TouchableOpacity
-                key={setting.id}
-                className="bg-surface rounded-2xl p-4 mb-3"
-                activeOpacity={
-                  setting.type ===
-                  "toggle"
-                    ? 1
-                    : 0.7
-                }
-              >
-                <View className="flex-row items-center">
-                  <View className="bg-primary/20 rounded-full w-12 h-12 items-center justify-center mr-4">
-                    <Ionicons
-                      name={
-                        setting.icon as any
-                      }
-                      size={24}
-                      color="#1DB954"
-                    />
-                  </View>
-
-                  <View className="flex-1">
-                    <Text className="text-text-primary font-bold text-base mb-1">
-                      {setting.title}
-                    </Text>
-
-                    <Text className="text-text-secondary text-sm">
-                      {
-                        setting.description
-                      }
-                    </Text>
-                  </View>
-
-                  {setting.type ===
-                  "toggle" ? (
-                    <Switch
-                      value={
-                        setting.value
-                      }
-                      onValueChange={(
-                        value
-                      ) =>
-                        handleToggle(
-                          setting.id,
-                          value
-                        )
-                      }
-                      thumbColor="#FFFFFF"
-                      trackColor={{
-                        false:
-                          "#2A2A2A",
-
-                        true:
-                          "#1DB954",
-                      }}
-                    />
-                  ) : (
-                    <Ionicons
-                      name="chevron-forward"
-                      size={20}
-                      color="#666"
-                    />
-                  )}
-                </View>
-              </TouchableOpacity>
-            )
-          )}
-        </View>
-
-        {/* =====================================================
-            PRIVACY SECTION
-        ===================================================== */}
-
-        <View className="px-6 pt-4">
-          <Text className="text-text-primary text-lg font-bold mb-4">
-            Privacy
-          </Text>
-
-          {privacySettings.map(
-            (setting) => (
-              <View
-                key={setting.id}
-                className="bg-surface rounded-2xl p-4 mb-3"
-              >
-                <View className="flex-row items-center">
-                  <View className="bg-primary/20 rounded-full w-12 h-12 items-center justify-center mr-4">
-                    <Ionicons
-                      name={
-                        setting.icon as any
-                      }
-                      size={24}
-                      color="#1DB954"
-                    />
-                  </View>
-
-                  <View className="flex-1">
-                    <Text className="text-text-primary font-bold text-base mb-1">
-                      {setting.title}
-                    </Text>
-
-                    <Text className="text-text-secondary text-sm">
-                      {
-                        setting.description
-                      }
-                    </Text>
-                  </View>
-
-                  <Switch
-                    value={setting.value}
-                    onValueChange={(
-                      value
-                    ) =>
-                      handleToggle(
-                        setting.id,
-                        value
-                      )
-                    }
-                    trackColor={{
-                      false:
-                        "#2A2A2A",
-
-                      true:
-                        "#1DB954",
-                    }}
-                    thumbColor="#FFFFFF"
-                  />
-                </View>
-              </View>
-            )
-          )}
-        </View>
-
-        {/* =====================================================
-            ACCOUNT SECTION
-        ===================================================== */}
-
-        <View className="px-6 pt-4">
-          <Text className="text-text-primary text-lg font-bold mb-4">
-            Account
-          </Text>
-
-          {accountSettings.map(
-            (setting) => (
-              <TouchableOpacity
-                key={setting.id}
-                className="bg-surface rounded-2xl p-4 mb-3"
-                activeOpacity={0.7}
-              >
-                <View className="flex-row items-center">
-                  <View className="bg-primary/20 rounded-full w-12 h-12 items-center justify-center mr-4">
-                    <Ionicons
-                      name={
-                        setting.icon as any
-                      }
-                      size={24}
-                      color="#1DB954"
-                    />
-                  </View>
-
-                  <View className="flex-1">
-                    <Text className="text-text-primary font-bold text-base mb-1">
-                      {setting.title}
-                    </Text>
-
-                    <Text className="text-text-secondary text-sm">
-                      {
-                        setting.description
-                      }
-                    </Text>
-                  </View>
-
+                <TouchableOpacity
+                  activeOpacity={0.8}
+                  onPress={() =>
+                    router.back()
+                  }
+                  className="
+                    w-12
+                    h-12
+                    rounded-full
+                    bg-[#F3F4F6]
+                    items-center
+                    justify-center
+                    mr-4
+                  "
+                >
                   <Ionicons
-                    name="chevron-forward"
-                    size={20}
-                    color="#666"
+                    name="arrow-back"
+                    size={22}
+                    color="#111"
+                  />
+                </TouchableOpacity>
+
+                {/* TEXT */}
+
+                <View className="flex-1">
+                  <Text
+                    className="
+                      text-black
+                      text-[30px]
+                      font-black
+                    "
+                  >
+                    Privacy & Security
+                  </Text>
+
+                  <Text
+                    className="
+                      text-[#6B7280]
+                      mt-1
+                      text-sm
+                    "
+                  >
+                    Manage your account protection
+                  </Text>
+                </View>
+              </View>
+
+              {/* SAVING */}
+
+              {saving ? (
+                <View
+                  className="
+                    w-14
+                    h-14
+                    rounded-[22px]
+                    bg-[#D9F26A]
+                    items-center
+                    justify-center
+                  "
+                >
+                  <ActivityIndicator
+                    size="small"
+                    color="#111"
                   />
                 </View>
-              </TouchableOpacity>
-            )
-          )}
-        </View>
+              ) : (
+                <View
+                  className="
+                    w-14
+                    h-14
+                    rounded-[22px]
+                    bg-[#D9F26A]
+                    items-center
+                    justify-center
+                  "
+                >
+                  <Ionicons
+                    name="shield-checkmark"
+                    size={24}
+                    color="#111"
+                  />
+                </View>
+              )}
+            </View>
+          </View>
 
-        {/* =====================================================
-            DELETE ACCOUNT
-        ===================================================== */}
+          {/* =================================================
+             CONTENT
+          ================================================= */}
 
-        <View className="px-6 pt-4">
-          <TouchableOpacity
-            className="bg-surface rounded-2xl p-5 flex-row items-center justify-between border-2 border-red-500/20"
-            activeOpacity={0.7}
+          <ScrollView
+            className="flex-1"
+            showsVerticalScrollIndicator={
+              false
+            }
+            contentContainerStyle={{
+              paddingBottom: 120,
+            }}
           >
-            <View className="flex-row items-center">
-              <View className="bg-red-500/20 rounded-full w-12 h-12 items-center justify-center mr-4">
-                <Ionicons
-                  name="trash-outline"
-                  size={24}
-                  color="#EF4444"
-                />
-              </View>
+            {/* =================================================
+               SECURITY
+            ================================================= */}
 
-              <View>
-                <Text className="text-red-500 font-bold text-base mb-1">
-                  Delete Account
-                </Text>
+            <SectionTitle
+              title="Security"
+            />
 
-                <Text className="text-text-secondary text-sm">
-                  Permanently delete your
-                  account
-                </Text>
-              </View>
+            <View className="px-6">
+              {securitySettings.map(
+                (
+                  setting
+                ) => (
+                  <SettingsCard
+                    key={
+                      setting.id
+                    }
+                    setting={
+                      setting
+                    }
+                    onToggle={
+                      handleToggle
+                    }
+                  />
+                )
+              )}
             </View>
 
-            <Ionicons
-              name="chevron-forward"
-              size={20}
-              color="#EF4444"
-            />
-          </TouchableOpacity>
-        </View>
+            {/* =================================================
+               PRIVACY
+            ================================================= */}
 
-        {/* =====================================================
-            INFO
-        ===================================================== */}
-
-        <View className="px-6 pt-6 pb-4">
-          <View className="bg-primary/10 rounded-2xl p-4 flex-row">
-            <Ionicons
-              name="information-circle-outline"
-              size={24}
-              color="#1DB954"
+            <SectionTitle
+              title="Privacy"
             />
 
-            <Text className="text-text-secondary text-sm ml-3 flex-1">
-              We take your privacy
-              seriously. Your data is
-              encrypted and stored
-              securely. You can manage
-              your privacy settings at
-              any time.
-            </Text>
-          </View>
+            <View className="px-6">
+              {privacySettings.map(
+                (
+                  setting
+                ) => (
+                  <SettingsCard
+                    key={
+                      setting.id
+                    }
+                    setting={
+                      setting
+                    }
+                    onToggle={
+                      handleToggle
+                    }
+                  />
+                )
+              )}
+            </View>
+
+            {/* =================================================
+               ACCOUNT
+            ================================================= */}
+
+            <SectionTitle
+              title="Account"
+            />
+
+            <View className="px-6">
+              {accountSettings.map(
+                (
+                  setting
+                ) => (
+                  <TouchableOpacity
+                    key={
+                      setting.id
+                    }
+                    activeOpacity={
+                      0.9
+                    }
+                    className="
+                      bg-[#F3F4F6]
+                      rounded-[30px]
+                      p-5
+                      mb-4
+                      flex-row
+                      items-center
+                    "
+                  >
+                    {/* ICON */}
+
+                    <View
+                      className="
+                        w-16
+                        h-16
+                        rounded-[22px]
+                        bg-white
+                        items-center
+                        justify-center
+                        mr-4
+                      "
+                    >
+                      <Ionicons
+                        name={
+                          setting.icon as any
+                        }
+                        size={
+                          28
+                        }
+                        color="#111"
+                      />
+                    </View>
+
+                    {/* TEXT */}
+
+                    <View className="flex-1">
+                      <Text
+                        className="
+                          text-black
+                          text-[17px]
+                          font-black
+                        "
+                      >
+                        {
+                          setting.title
+                        }
+                      </Text>
+
+                      <Text
+                        className="
+                          text-[#6B7280]
+                          text-sm
+                          mt-2
+                          leading-6
+                        "
+                      >
+                        {
+                          setting.description
+                        }
+                      </Text>
+                    </View>
+
+                    {/* ARROW */}
+
+                    <View
+                      className="
+                        w-12
+                        h-12
+                        rounded-full
+                        bg-white
+                        items-center
+                        justify-center
+                      "
+                    >
+                      <Ionicons
+                        name="chevron-forward"
+                        size={
+                          20
+                        }
+                        color="#111"
+                      />
+                    </View>
+                  </TouchableOpacity>
+                )
+              )}
+            </View>
+
+            {/* =================================================
+               DELETE ACCOUNT
+            ================================================= */}
+
+            <View className="px-6 mt-2">
+              <TouchableOpacity
+                activeOpacity={0.9}
+                className="
+                  bg-[#FEE2E2]
+                  rounded-[32px]
+                  p-5
+                  flex-row
+                  items-center
+                  justify-between
+                "
+              >
+                {/* LEFT */}
+
+                <View className="flex-row items-center flex-1">
+                  <View
+                    className="
+                      w-16
+                      h-16
+                      rounded-[22px]
+                      bg-white
+                      items-center
+                      justify-center
+                      mr-4
+                    "
+                  >
+                    <Ionicons
+                      name="trash-outline"
+                      size={28}
+                      color="#EF4444"
+                    />
+                  </View>
+
+                  <View className="flex-1">
+                    <Text
+                      className="
+                        text-[#EF4444]
+                        text-[17px]
+                        font-black
+                      "
+                    >
+                      Delete Account
+                    </Text>
+
+                    <Text
+                      className="
+                        text-[#B91C1C]
+                        text-sm
+                        mt-2
+                        leading-6
+                      "
+                    >
+                      Permanently delete your account
+                    </Text>
+                  </View>
+                </View>
+
+                {/* ARROW */}
+
+                <Ionicons
+                  name="chevron-forward"
+                  size={22}
+                  color="#EF4444"
+                />
+              </TouchableOpacity>
+            </View>
+
+            {/* =================================================
+               INFO CARD
+            ================================================= */}
+
+            <View className="px-6 mt-6">
+              <View
+                className="
+                  bg-[#D9F26A]
+                  rounded-[34px]
+                  p-6
+                "
+              >
+                <View className="flex-row">
+                  {/* ICON */}
+
+                  <View
+                    className="
+                      w-14
+                      h-14
+                      rounded-[20px]
+                      bg-black
+                      items-center
+                      justify-center
+                      mr-4
+                    "
+                  >
+                    <Ionicons
+                      name="shield-checkmark"
+                      size={26}
+                      color="#D9F26A"
+                    />
+                  </View>
+
+                  {/* TEXT */}
+
+                  <View className="flex-1">
+                    <Text
+                      className="
+                        text-black
+                        text-[18px]
+                        font-black
+                      "
+                    >
+                      Your Privacy Matters
+                    </Text>
+
+                    <Text
+                      className="
+                        text-black/70
+                        text-sm
+                        mt-3
+                        leading-7
+                      "
+                    >
+                      Your data is encrypted and
+                      securely stored. You can
+                      manage your privacy settings
+                      anytime from this page.
+                    </Text>
+                  </View>
+                </View>
+              </View>
+            </View>
+          </ScrollView>
         </View>
-      </ScrollView>
-    </SafeScreen>
+      </SafeScreen>
+    </>
   );
 }
 
 export default PrivacyAndSecurityScreen;
+
+/* =========================================================
+   SECTION TITLE
+========================================================= */
+
+function SectionTitle({
+  title,
+}: {
+  title: string;
+}) {
+  return (
+    <View className="px-6 mb-4 mt-2">
+      <Text
+        className="
+          text-black
+          text-[24px]
+          font-black
+        "
+      >
+        {title}
+      </Text>
+    </View>
+  );
+}
+
+/* =========================================================
+   SETTINGS CARD
+========================================================= */
+
+function SettingsCard({
+  setting,
+
+  onToggle,
+}: {
+  setting: SecurityOption;
+
+  onToggle: (
+    id: string,
+    value: boolean
+  ) => void;
+}) {
+  return (
+    <TouchableOpacity
+      activeOpacity={
+        setting.type ===
+        "toggle"
+          ? 1
+          : 0.9
+      }
+      className="
+        bg-[#F3F4F6]
+        rounded-[30px]
+        p-5
+        mb-4
+      "
+    >
+      <View className="flex-row items-center">
+        {/* ICON */}
+
+        <View
+          className="
+            w-16
+            h-16
+            rounded-[22px]
+            bg-white
+            items-center
+            justify-center
+            mr-4
+          "
+        >
+          <Ionicons
+            name={
+              setting.icon as any
+            }
+            size={28}
+            color="#111"
+          />
+        </View>
+
+        {/* TEXT */}
+
+        <View className="flex-1 pr-4">
+          <Text
+            className="
+              text-black
+              text-[17px]
+              font-black
+            "
+          >
+            {setting.title}
+          </Text>
+
+          <Text
+            className="
+              text-[#6B7280]
+              text-sm
+              mt-2
+              leading-6
+            "
+          >
+            {
+              setting.description
+            }
+          </Text>
+        </View>
+
+        {/* ACTION */}
+
+        {setting.type ===
+        "toggle" ? (
+          <Switch
+            value={
+              setting.value
+            }
+            onValueChange={(
+              value
+            ) =>
+              onToggle(
+                setting.id,
+                value
+              )
+            }
+            thumbColor="#FFFFFF"
+            trackColor={{
+              false:
+                "#D1D5DB",
+
+              true:
+                "#D9F26A",
+            }}
+            ios_backgroundColor="#D1D5DB"
+          />
+        ) : (
+          <View
+            className="
+              w-12
+              h-12
+              rounded-full
+              bg-white
+              items-center
+              justify-center
+            "
+          >
+            <Ionicons
+              name="chevron-forward"
+              size={20}
+              color="#111"
+            />
+          </View>
+        )}
+      </View>
+    </TouchableOpacity>
+  );
+}
+
+/* =========================================================
+   LOADING UI
+========================================================= */
+
+function LoadingUI() {
+  return (
+    <SafeScreen>
+      <View
+        className="
+          flex-1
+          bg-white
+          items-center
+          justify-center
+          px-6
+        "
+      >
+        <View
+          className="
+            bg-[#F3F4F6]
+            rounded-[40px]
+            px-10
+            py-12
+            items-center
+          "
+        >
+          <View
+            className="
+              w-24
+              h-24
+              rounded-full
+              bg-[#D9F26A]
+              items-center
+              justify-center
+              mb-6
+            "
+          >
+            <Ionicons
+              name="shield-checkmark"
+              size={34}
+              color="#111"
+            />
+          </View>
+
+          <ActivityIndicator
+            size="large"
+            color="#111"
+          />
+
+          <Text
+            className="
+              text-black
+              text-[20px]
+              font-black
+              mt-6
+            "
+          >
+            Loading Settings
+          </Text>
+
+          <Text
+            className="
+              text-[#6B7280]
+              text-center
+              mt-3
+              leading-6
+            "
+          >
+            Preparing your privacy and
+            security preferences.
+          </Text>
+        </View>
+      </View>
+    </SafeScreen>
+  );
+}

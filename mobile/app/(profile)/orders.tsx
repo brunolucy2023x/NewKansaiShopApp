@@ -27,42 +27,57 @@ import {
   Text,
   TouchableOpacity,
   View,
+  StatusBar,
 } from "react-native";
 
+/* =========================================================
+   COMPONENT
+========================================================= */
+
 function OrdersScreen() {
-  /* =========================================================
+  /* =====================================================
      DATA
-  ========================================================= */
+  ===================================================== */
 
   const {
     data: orders = [],
     isLoading,
+
     isError,
   } = useOrders();
 
   const {
     createReviewAsync,
+
     isCreatingReview,
   } = useReviews();
 
-  /* =========================================================
+  /* =====================================================
      STATE
-  ========================================================= */
+  ===================================================== */
 
-  const [showRatingModal, setShowRatingModal] =
-    useState(false);
+  const [
+    showRatingModal,
+    setShowRatingModal,
+  ] = useState(false);
 
-  const [selectedOrder, setSelectedOrder] =
-    useState<any | null>(null);
+  const [
+    selectedOrder,
+    setSelectedOrder,
+  ] = useState<any | null>(
+    null
+  );
 
-  const [productRatings, setProductRatings] =
-    useState<{
-      [key: string]: number;
-    }>({});
+  const [
+    productRatings,
+    setProductRatings,
+  ] = useState<{
+    [key: string]: number;
+  }>({});
 
-  /* =========================================================
-     OPEN RATING MODAL
-  ========================================================= */
+  /* =====================================================
+     OPEN MODAL
+  ===================================================== */
 
   const handleOpenRating = (
     order: any
@@ -81,30 +96,40 @@ function OrdersScreen() {
           item.product?.id;
 
         if (productId) {
-          initialRatings[productId] = 0;
+          initialRatings[
+            productId
+          ] = 0;
         }
       }
     );
 
-    setProductRatings(initialRatings);
+    setProductRatings(
+      initialRatings
+    );
   };
 
-  /* =========================================================
+  /* =====================================================
      SUBMIT REVIEWS
-  ========================================================= */
+  ===================================================== */
 
   const handleSubmitRating =
     async () => {
-      if (!selectedOrder) return;
+      if (!selectedOrder)
+        return;
 
-      const allRated = Object.values(
-        productRatings
-      ).every((rating) => rating > 0);
+      const allRated =
+        Object.values(
+          productRatings
+        ).every(
+          (rating) =>
+            rating > 0
+        );
 
       if (!allRated) {
         Alert.alert(
-          "Error",
-          "Please rate all products"
+          "Incomplete Ratings",
+
+          "Please rate all ordered products."
         );
 
         return;
@@ -130,301 +155,586 @@ function OrdersScreen() {
         );
 
         Alert.alert(
-          "Success",
-          "Thank you for rating all products!"
+          "Thank You!",
+
+          "Your ratings were submitted successfully."
         );
 
-        setShowRatingModal(false);
+        setShowRatingModal(
+          false
+        );
 
-        setSelectedOrder(null);
+        setSelectedOrder(
+          null
+        );
 
-        setProductRatings({});
-      } catch (error: any) {
-        console.error(error);
-
+        setProductRatings(
+          {}
+        );
+      } catch (
+        error: any
+      ) {
         Alert.alert(
           "Error",
+
           error?.message ||
-            "Failed to submit review"
+            "Failed to submit ratings"
         );
       }
     };
 
-  /* =========================================================
+  /* =====================================================
      LOADING
-  ========================================================= */
+  ===================================================== */
 
   if (isLoading) {
     return <LoadingUI />;
   }
 
-  /* =========================================================
+  /* =====================================================
      ERROR
-  ========================================================= */
+  ===================================================== */
 
   if (isError) {
     return <ErrorUI />;
   }
 
-  /* =========================================================
+  /* =====================================================
      EMPTY
-  ========================================================= */
+  ===================================================== */
 
-  if (!orders || orders.length === 0) {
+  if (
+    !orders ||
+    orders.length === 0
+  ) {
     return <EmptyUI />;
   }
 
+  /* =====================================================
+     MAIN
+  ===================================================== */
+
   return (
-    <SafeScreen>
-      {/* =====================================================
-          HEADER
-      ===================================================== */}
+    <>
+      <StatusBar
+        barStyle="dark-content"
+        backgroundColor="#FFFFFF"
+      />
 
-      <View className="px-6 pb-5 border-b border-surface flex-row items-center">
-        <TouchableOpacity
-          onPress={() => router.back()}
-          className="mr-4"
-        >
-          <Ionicons
-            name="arrow-back"
-            size={28}
-            color="#FFFFFF"
-          />
-        </TouchableOpacity>
+      <SafeScreen>
+        <View className="flex-1 bg-white">
+          {/* =================================================
+             HEADER
+          ================================================= */}
 
-        <Text className="text-text-primary text-2xl font-bold">
-          My Orders
-        </Text>
-      </View>
+          <View className="px-6 pt-4 pb-6">
+            <View
+              className="
+                flex-row
+                items-center
+                justify-between
+              "
+            >
+              {/* LEFT */}
 
-      {/* =====================================================
-          ORDERS
-      ===================================================== */}
+              <View className="flex-row items-center flex-1">
+                {/* BACK */}
 
-      <ScrollView
-        className="flex-1"
-        showsVerticalScrollIndicator={
-          false
-        }
-        contentContainerStyle={{
-          paddingBottom: 100,
-        }}
-      >
-        <View className="px-6 py-4">
-          {orders.map((order: any) => {
-            const totalItems =
-              order.orderItems?.reduce(
-                (
-                  sum: number,
-                  item: any
-                ) =>
-                  sum +
-                  (item.quantity || 0),
-                0
-              ) || 0;
+                <TouchableOpacity
+                  activeOpacity={0.8}
+                  onPress={() =>
+                    router.back()
+                  }
+                  className="
+                    w-12
+                    h-12
+                    rounded-full
+                    bg-[#F3F4F6]
+                    items-center
+                    justify-center
+                    mr-4
+                  "
+                >
+                  <Ionicons
+                    name="arrow-back"
+                    size={22}
+                    color="#111"
+                  />
+                </TouchableOpacity>
 
-            const firstImage =
-              order.orderItems?.[0]
-                ?.image || "";
+                {/* TEXT */}
 
-            return (
-              <View
-                key={order.id}
-                className="bg-surface rounded-3xl p-5 mb-4"
-              >
-                {/* =====================================
-                    TOP SECTION
-                ===================================== */}
+                <View className="flex-1">
+                  <Text
+                    className="
+                      text-black
+                      text-[32px]
+                      font-black
+                    "
+                  >
+                    My Orders
+                  </Text>
 
-                <View className="flex-row mb-4">
-                  {/* IMAGE */}
-
-                  <View className="relative">
-                    <Image
-                      source={
-                        firstImage ||
-                        "https://placehold.co/100x100"
-                      }
-                      style={{
-                        height: 80,
-                        width: 80,
-                        borderRadius: 12,
-                      }}
-                      contentFit="cover"
-                    />
-
-                    {/* MORE ITEMS BADGE */}
-
-                    {order.orderItems
-                      ?.length > 1 && (
-                      <View className="absolute -bottom-1 -right-1 bg-primary rounded-full size-7 items-center justify-center">
-                        <Text className="text-background text-xs font-bold">
-                          +
-                          {order
-                            .orderItems
-                            .length - 1}
-                        </Text>
-                      </View>
-                    )}
-                  </View>
-
-                  {/* DETAILS */}
-
-                  <View className="flex-1 ml-4">
-                    <Text className="text-text-primary font-bold text-base mb-1">
-                      Order #
-                      {order.id
-                        ?.slice(-8)
-                        ?.toUpperCase()}
-                    </Text>
-
-                    <Text className="text-text-secondary text-sm mb-2">
-                      {formatDate(
-                        order.createdAt
-                      )}
-                    </Text>
-
-                    <View
-                      className="self-start px-3 py-1.5 rounded-full"
-                      style={{
-                        backgroundColor:
-                          getStatusColor(
-                            order.status
-                          ) + "20",
-                      }}
-                    >
-                      <Text
-                        className="text-xs font-bold"
-                        style={{
-                          color:
-                            getStatusColor(
-                              order.status
-                            ),
-                        }}
-                      >
-                        {capitalizeFirstLetter(
-                          order.status
-                        )}
-                      </Text>
-                    </View>
-                  </View>
-                </View>
-
-                {/* =====================================
-                    ITEMS
-                ===================================== */}
-
-                <View className="mb-4">
-                  {order.orderItems?.map(
-                    (
-                      item: any,
-                      index: number
-                    ) => (
-                      <Text
-                        key={
-                          item.id || index
-                        }
-                        className="text-text-secondary text-sm mb-1"
-                        numberOfLines={1}
-                      >
-                        {item.name} ×{" "}
-                        {item.quantity}
-                      </Text>
-                    )
-                  )}
-                </View>
-
-                {/* =====================================
-                    FOOTER
-                ===================================== */}
-
-                <View className="border-t border-background-lighter pt-3 flex-row justify-between items-center">
-                  {/* TOTAL */}
-
-                  <View>
-                    <Text className="text-text-secondary text-xs mb-1">
-                      {totalItems} items
-                    </Text>
-
-                    <Text className="text-primary font-bold text-xl">
-                      $
-                      {Number(
-                        order.totalPrice ||
-                          0
-                      ).toFixed(2)}
-                    </Text>
-                  </View>
-
-                  {/* REVIEW */}
-
-                  {order.status ===
-                    "delivered" &&
-                    (order.hasReviewed ? (
-                      <View className="bg-primary/20 px-5 py-3 rounded-full flex-row items-center">
-                        <Ionicons
-                          name="checkmark-circle"
-                          size={18}
-                          color="#1DB954"
-                        />
-
-                        <Text className="text-primary font-bold text-sm ml-2">
-                          Reviewed
-                        </Text>
-                      </View>
-                    ) : (
-                      <TouchableOpacity
-                        className="bg-primary px-5 py-3 rounded-full flex-row items-center"
-                        activeOpacity={
-                          0.7
-                        }
-                        onPress={() =>
-                          handleOpenRating(
-                            order
-                          )
-                        }
-                      >
-                        <Ionicons
-                          name="star"
-                          size={18}
-                          color="#121212"
-                        />
-
-                        <Text className="text-background font-bold text-sm ml-2">
-                          Leave Rating
-                        </Text>
-                      </TouchableOpacity>
-                    ))}
+                  <Text
+                    className="
+                      text-[#6B7280]
+                      mt-1
+                      text-sm
+                    "
+                  >
+                    Track and manage purchases
+                  </Text>
                 </View>
               </View>
-            );
-          })}
+
+              {/* ICON */}
+
+              <View
+                className="
+                  w-14
+                  h-14
+                  rounded-[22px]
+                  bg-[#D9F26A]
+                  items-center
+                  justify-center
+                "
+              >
+                <Ionicons
+                  name="receipt-outline"
+                  size={24}
+                  color="#111"
+                />
+              </View>
+            </View>
+          </View>
+
+          {/* =================================================
+             ORDERS
+          ================================================= */}
+
+          <ScrollView
+            className="flex-1"
+            showsVerticalScrollIndicator={
+              false
+            }
+            contentContainerStyle={{
+              paddingHorizontal: 20,
+              paddingBottom: 120,
+            }}
+          >
+            {orders.map(
+              (order: any) => {
+                const totalItems =
+                  order.orderItems?.reduce(
+                    (
+                      sum: number,
+                      item: any
+                    ) =>
+                      sum +
+                      (item.quantity ||
+                        0),
+                    0
+                  ) || 0;
+
+                const firstImage =
+                  order.orderItems?.[0]
+                    ?.image || "";
+
+                return (
+                  <View
+                    key={order.id}
+                    className="
+                      bg-[#F3F4F6]
+                      rounded-[36px]
+                      p-5
+                      mb-6
+                    "
+                    style={{
+                      shadowColor:
+                        "#000",
+
+                      shadowOffset:
+                        {
+                          width: 0,
+                          height: 6,
+                        },
+
+                      shadowOpacity: 0.05,
+
+                      shadowRadius: 14,
+
+                      elevation: 4,
+                    }}
+                  >
+                    {/* =====================================
+                        TOP
+                    ===================================== */}
+
+                    <View className="flex-row">
+                      {/* IMAGE */}
+
+                      <View className="relative">
+                        <View
+                          className="
+                            bg-white
+                            rounded-[28px]
+                            overflow-hidden
+                          "
+                        >
+                          <Image
+                            source={{
+                              uri:
+                                firstImage ||
+                                "https://placehold.co/100x100",
+                            }}
+                            style={{
+                              width: 95,
+                              height: 95,
+                            }}
+                            contentFit="cover"
+                          />
+                        </View>
+
+                        {/* EXTRA ITEMS */}
+
+                        {order
+                          .orderItems
+                          ?.length >
+                          1 && (
+                          <View
+                            className="
+                              absolute
+                              -bottom-2
+                              -right-2
+                              bg-[#D9F26A]
+                              w-9
+                              h-9
+                              rounded-full
+                              items-center
+                              justify-center
+                              border-2
+                              border-[#F3F4F6]
+                            "
+                          >
+                            <Text
+                              className="
+                                text-black
+                                font-black
+                                text-xs
+                              "
+                            >
+                              +
+                              {order
+                                .orderItems
+                                .length -
+                                1}
+                            </Text>
+                          </View>
+                        )}
+                      </View>
+
+                      {/* INFO */}
+
+                      <View className="flex-1 ml-4 justify-between">
+                        <View>
+                          <Text
+                            className="
+                              text-black
+                              font-black
+                              text-[18px]
+                            "
+                          >
+                            Order #
+                            {order.id
+                              ?.slice(
+                                -8
+                              )
+                              ?.toUpperCase()}
+                          </Text>
+
+                          <Text
+                            className="
+                              text-[#6B7280]
+                              mt-2
+                              text-sm
+                            "
+                          >
+                            {formatDate(
+                              order.createdAt
+                            )}
+                          </Text>
+                        </View>
+
+                        {/* STATUS */}
+
+                        <View
+                          className="
+                            self-start
+                            px-4
+                            py-2
+                            rounded-full
+                            mt-3
+                          "
+                          style={{
+                            backgroundColor:
+                              getStatusColor(
+                                order.status
+                              ) + "20",
+                          }}
+                        >
+                          <Text
+                            className="
+                              font-black
+                              text-xs
+                            "
+                            style={{
+                              color:
+                                getStatusColor(
+                                  order.status
+                                ),
+                            }}
+                          >
+                            {capitalizeFirstLetter(
+                              order.status
+                            )}
+                          </Text>
+                        </View>
+                      </View>
+                    </View>
+
+                    {/* =====================================
+                        ITEMS
+                    ===================================== */}
+
+                    <View className="mt-6">
+                      {order.orderItems?.map(
+                        (
+                          item: any,
+                          index: number
+                        ) => (
+                          <View
+                            key={
+                              item.id ||
+                              index
+                            }
+                            className="
+                              flex-row
+                              items-center
+                              justify-between
+                              mb-3
+                            "
+                          >
+                            <View className="flex-row items-center flex-1 pr-4">
+                              <View
+                                className="
+                                  w-2
+                                  h-2
+                                  rounded-full
+                                  bg-[#D9F26A]
+                                  mr-3
+                                "
+                              />
+
+                              <Text
+                                numberOfLines={
+                                  1
+                                }
+                                className="
+                                  text-[#374151]
+                                  text-sm
+                                  flex-1
+                                "
+                              >
+                                {
+                                  item.name
+                                }
+                              </Text>
+                            </View>
+
+                            <Text
+                              className="
+                                text-black
+                                font-black
+                              "
+                            >
+                              ×
+                              {
+                                item.quantity
+                              }
+                            </Text>
+                          </View>
+                        )
+                      )}
+                    </View>
+
+                    {/* DIVIDER */}
+
+                    <View
+                      className="
+                        h-[1px]
+                        bg-[#E5E7EB]
+                        my-6
+                      "
+                    />
+
+                    {/* =====================================
+                        FOOTER
+                    ===================================== */}
+
+                    <View
+                      className="
+                        flex-row
+                        items-center
+                        justify-between
+                      "
+                    >
+                      {/* PRICE */}
+
+                      <View>
+                        <Text
+                          className="
+                            text-[#6B7280]
+                            text-xs
+                          "
+                        >
+                          {totalItems} items
+                        </Text>
+
+                        <Text
+                          className="
+                            text-black
+                            text-[30px]
+                            font-black
+                            mt-1
+                          "
+                        >
+                          $
+                          {Number(
+                            order.totalPrice ||
+                              0
+                          ).toFixed(
+                            2
+                          )}
+                        </Text>
+                      </View>
+
+                      {/* REVIEW */}
+
+                      {order.status ===
+                        "delivered" &&
+                        (order.hasReviewed ? (
+                          <View
+                            className="
+                              bg-[#DCFCE7]
+                              px-5
+                              py-4
+                              rounded-[24px]
+                              flex-row
+                              items-center
+                            "
+                          >
+                            <Ionicons
+                              name="checkmark-circle"
+                              size={
+                                18
+                              }
+                              color="#22C55E"
+                            />
+
+                            <Text
+                              className="
+                                text-[#16A34A]
+                                font-black
+                                ml-2
+                              "
+                            >
+                              Reviewed
+                            </Text>
+                          </View>
+                        ) : (
+                          <TouchableOpacity
+                            activeOpacity={
+                              0.9
+                            }
+                            onPress={() =>
+                              handleOpenRating(
+                                order
+                              )
+                            }
+                            className="
+                              bg-[#D9F26A]
+                              px-5
+                              py-4
+                              rounded-[24px]
+                              flex-row
+                              items-center
+                            "
+                          >
+                            <Ionicons
+                              name="star"
+                              size={
+                                18
+                              }
+                              color="#111"
+                            />
+
+                            <Text
+                              className="
+                                text-black
+                                font-black
+                                ml-2
+                              "
+                            >
+                              Rate Order
+                            </Text>
+                          </TouchableOpacity>
+                        ))}
+                    </View>
+                  </View>
+                );
+              }
+            )}
+          </ScrollView>
+
+          {/* =================================================
+             MODAL
+          ================================================= */}
+
+          <RatingModal
+            visible={
+              showRatingModal
+            }
+            onClose={() =>
+              setShowRatingModal(
+                false
+              )
+            }
+            order={selectedOrder}
+            productRatings={
+              productRatings
+            }
+            onSubmit={
+              handleSubmitRating
+            }
+            isSubmitting={
+              isCreatingReview
+            }
+            onRatingChange={(
+              productId,
+              rating
+            ) =>
+              setProductRatings(
+                (prev) => ({
+                  ...prev,
+                  [productId]:
+                    rating,
+                })
+              )
+            }
+          />
         </View>
-      </ScrollView>
-
-      {/* =====================================================
-          RATING MODAL
-      ===================================================== */}
-
-      <RatingModal
-        visible={showRatingModal}
-        onClose={() =>
-          setShowRatingModal(false)
-        }
-        order={selectedOrder}
-        productRatings={productRatings}
-        onSubmit={handleSubmitRating}
-        isSubmitting={isCreatingReview}
-        onRatingChange={(
-          productId,
-          rating
-        ) =>
-          setProductRatings((prev) => ({
-            ...prev,
-            [productId]: rating,
-          }))
-        }
-      />
-    </SafeScreen>
+      </SafeScreen>
+    </>
   );
 }
 
@@ -436,15 +746,70 @@ export default OrdersScreen;
 
 function LoadingUI() {
   return (
-    <View className="flex-1 items-center justify-center">
-      <ActivityIndicator
-        size="large"
-        color="#00D9FF"
-      />
+    <View
+      className="
+        flex-1
+        bg-white
+        items-center
+        justify-center
+        px-6
+      "
+    >
+      <View
+        className="
+          bg-[#F3F4F6]
+          rounded-[40px]
+          px-10
+          py-12
+          items-center
+        "
+      >
+        <View
+          className="
+            w-24
+            h-24
+            rounded-full
+            bg-[#D9F26A]
+            items-center
+            justify-center
+            mb-6
+          "
+        >
+          <Ionicons
+            name="receipt-outline"
+            size={34}
+            color="#111"
+          />
+        </View>
 
-      <Text className="text-text-secondary mt-4">
-        Loading orders...
-      </Text>
+        <ActivityIndicator
+          size="large"
+          color="#111"
+        />
+
+        <Text
+          className="
+            text-black
+            text-[20px]
+            font-black
+            mt-6
+          "
+        >
+          Loading Orders
+        </Text>
+
+        <Text
+          className="
+            text-[#6B7280]
+            text-center
+            mt-3
+            leading-6
+          "
+        >
+          Preparing your purchase
+          history and order details.
+        </Text>
+      </View>
     </View>
   );
 }
@@ -455,20 +820,54 @@ function LoadingUI() {
 
 function ErrorUI() {
   return (
-    <View className="flex-1 items-center justify-center px-6">
-      <Ionicons
-        name="alert-circle-outline"
-        size={64}
-        color="#FF6B6B"
-      />
+    <View
+      className="
+        flex-1
+        bg-white
+        items-center
+        justify-center
+        px-6
+      "
+    >
+      <View
+        className="
+          w-28
+          h-28
+          rounded-full
+          bg-[#FEE2E2]
+          items-center
+          justify-center
+          mb-6
+        "
+      >
+        <Ionicons
+          name="cloud-offline-outline"
+          size={54}
+          color="#EF4444"
+        />
+      </View>
 
-      <Text className="text-text-primary font-semibold text-xl mt-4">
+      <Text
+        className="
+          text-black
+          text-[28px]
+          font-black
+          text-center
+        "
+      >
         Failed to load orders
       </Text>
 
-      <Text className="text-text-secondary text-center mt-2">
-        Please check your connection
-        and try again
+      <Text
+        className="
+          text-[#6B7280]
+          text-center
+          mt-4
+          leading-7
+        "
+      >
+        Please check your internet
+        connection and try again.
       </Text>
     </View>
   );
@@ -480,20 +879,51 @@ function ErrorUI() {
 
 function EmptyUI() {
   return (
-    <View className="flex-1 items-center justify-center px-6">
-      <Ionicons
-        name="receipt-outline"
-        size={80}
-        color="#666"
-      />
+    <View
+      className="
+        flex-1
+        bg-white
+        items-center
+        justify-center
+        px-6
+      "
+    >
+      <View
+        className="
+          bg-[#F3F4F6]
+          p-8
+          rounded-full
+        "
+      >
+        <Ionicons
+          name="receipt-outline"
+          size={60}
+          color="#9CA3AF"
+        />
+      </View>
 
-      <Text className="text-text-primary font-semibold text-xl mt-4">
-        No orders yet
+      <Text
+        className="
+          text-black
+          text-[28px]
+          font-black
+          mt-6
+        "
+      >
+        No Orders Yet
       </Text>
 
-      <Text className="text-text-secondary text-center mt-2">
-        Your order history will appear
-        here
+      <Text
+        className="
+          text-[#6B7280]
+          text-center
+          mt-4
+          leading-7
+        "
+      >
+        Your purchases and order history
+        will appear here once you start
+        shopping.
       </Text>
     </View>
   );
